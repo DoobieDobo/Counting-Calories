@@ -1,0 +1,536 @@
+/* Reusable pieces: the budget bar, macro bars, product cards, chips, votes. */
+
+/* ── Budget bar ────────────────────────────────────────────────────────── */
+
+.budget-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: -24px -20px 0;
+  padding: 14px 20px 12px;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.budget-bar-top,
+.budget-bar-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.budget-bar-foot {
+  font-size: 0.87rem;
+  color: var(--text-muted);
+}
+
+.budget-bar-figure {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 1.05rem;
+}
+
+.budget-bar-figure strong {
+  font-size: 1.4rem;
+}
+
+.budget-bar-sep,
+.budget-bar-total,
+.budget-bar-unit {
+  color: var(--text-muted);
+}
+
+.budget-bar-track {
+  position: relative;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.budget-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent);
+  transition: width 0.22s ease;
+}
+
+.budget-bar-preview {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--accent) 55%, transparent) 0 5px,
+    transparent 5px 10px
+  );
+  transition: left 0.14s ease, width 0.14s ease;
+}
+
+.budget-bar-tight .budget-bar-fill {
+  background: var(--warn);
+}
+
+.budget-bar-over .budget-bar-fill {
+  background: var(--danger);
+}
+
+.budget-bar-over .budget-bar-preview {
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--danger) 65%, transparent) 0 5px,
+    transparent 5px 10px
+  );
+}
+
+.budget-bar-warn {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.budget-bar-banked {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Macro bar ─────────────────────────────────────────────────────────── */
+
+.macro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.macro-track {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--bg-sunken);
+}
+
+.macro-micro .macro-track {
+  height: 5px;
+}
+
+.macro-seg {
+  height: 100%;
+}
+
+.macro-seg.macro-protein,
+.macro-dot.macro-protein {
+  background: var(--protein);
+}
+
+.macro-seg.macro-carbs,
+.macro-dot.macro-carbs {
+  background: var(--carbs);
+}
+
+.macro-seg.macro-fat,
+.macro-dot.macro-fat {
+  background: var(--fat);
+}
+
+.macro-empty {
+  background: var(--border);
+}
+
+.macro-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.macro-key li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.macro-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.macro-grams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+/* ── Product cards (the shelf) ─────────────────────────────────────────── */
+
+.shelf {
+  display: grid;
+  gap: 12px;
+}
+
+/*
+ * Two columns once there's room. A slot can offer six options, and a single
+ * tall column pushes the cheap ones below the fold — which quietly biases the
+ * choice towards whatever happens to be listed first.
+ */
+@media (min-width: 720px) {
+  .shelf {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.product {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 18px;
+  text-align: left;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: border-color 0.14s ease, transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.product:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lift);
+}
+
+.product-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.product-over {
+  border-style: dashed;
+}
+
+.product-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.product-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.product-name {
+  font-weight: 650;
+  font-size: 1.02rem;
+}
+
+.product-pack {
+  font-size: 0.83rem;
+  color: var(--text-faint);
+}
+
+.product-use {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.product-note {
+  font-style: italic;
+}
+
+.product-body .macro {
+  max-width: 190px;
+  margin-top: 3px;
+}
+
+.product-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.product-tag {
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-weight: 650;
+  color: var(--text-faint);
+  background: var(--bg-sunken);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+
+.product-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  white-space: nowrap;
+}
+
+.product-price strong {
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.product-price-unit {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+
+.product-over-flag {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--danger);
+}
+
+.product-skip {
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
+}
+
+.product-skip .product-emoji {
+  opacity: 0.5;
+}
+
+/* ── Slot progress rail ────────────────────────────────────────────────── */
+
+.slot-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slot-progress ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.slot-pip {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  transition: all 0.14s ease;
+}
+
+.slot-pip:disabled {
+  opacity: 0.4;
+}
+
+.slot-pip-done {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.slot-pip-skipped {
+  background: var(--bg-sunken);
+  color: var(--text-faint);
+}
+
+.slot-pip-current {
+  border-color: var(--text);
+  border-width: 2.5px;
+  color: var(--text);
+  transform: scale(1.1);
+}
+
+.slot-progress-caption {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ── Roll button ───────────────────────────────────────────────────────── */
+
+.roll-die {
+  display: inline-block;
+  font-size: 1.15rem;
+}
+
+.roll-die-spin {
+  animation: roll 0.42s ease-out;
+}
+
+@keyframes roll {
+  0% {
+    transform: rotate(0) scale(1);
+  }
+  50% {
+    transform: rotate(200deg) scale(1.3);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+/* ── Player chips ──────────────────────────────────────────────────────── */
+
+.player-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-size: 0.92rem;
+}
+
+.player-chip-active {
+  border-color: var(--seat);
+  background: color-mix(in srgb, var(--seat) 12%, var(--surface));
+}
+
+.player-chip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--seat, var(--accent));
+  flex: none;
+}
+
+.player-chip-name {
+  font-weight: 650;
+}
+
+.player-chip-target {
+  color: var(--text-faint);
+  font-size: 0.85rem;
+}
+
+.player-chip-turn {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--seat);
+}
+
+.player-chip-remove {
+  border: 0;
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 0 0 0 2px;
+}
+
+.player-chip-remove:hover {
+  color: var(--danger);
+}
+
+.picker-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--seat);
+  background: color-mix(in srgb, var(--seat) 10%, var(--surface));
+  font-size: 0.94rem;
+}
+
+/* ── Vote panel ────────────────────────────────────────────────────────── */
+
+.vote-panel {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vote-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vote-row {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.vote-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.vote-player {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+}
+
+.vote-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vote-option {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-size: 0.9rem;
+}
+
+.vote-option-picked {
+  border-color: var(--seat);
+  background: color-mix(in srgb, var(--seat) 16%, var(--surface));
+  font-weight: 650;
+}
+
+.vote-winner {
+  font-size: 1.35rem;
+  font-weight: 700;
+}

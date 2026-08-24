@@ -9,7 +9,7 @@ import {
   optionKcal,
   optionNutrition,
   priciestBuild,
-  useRatio,
+  portionRatio,
 } from './cart'
 
 const catalog: Record<string, Product> = {
@@ -124,7 +124,7 @@ const portionsDish: Dish = {
 describe('option pricing', () => {
   it('prices a portion as a fraction of the pack, not the whole pack', () => {
     // 200 g of a sauce listed at 120 kcal per 100 g.
-    expect(useRatio(catalog['sauce-pinoy']!, { amount: 200, unit: 'g' })).toBe(2)
+    expect(portionRatio(catalog['sauce-pinoy']!, { amount: 200, unit: 'g' })).toBe(2)
     expect(optionKcal(catalog['sauce-pinoy']!, { amount: 200, unit: 'g' })).toBe(240)
   })
 

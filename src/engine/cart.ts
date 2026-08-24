@@ -42,19 +42,19 @@ export type Choices = Record<string, string | null>
  * mismatch falls back to a straight ratio rather than throwing, so one bad data
  * entry can't take the whole store down mid-game.
  */
-export function useRatio(product: Product, use: Qty): number {
+export function portionRatio(product: Product, use: Qty): number {
   if (product.basis.amount <= 0) return 0
   return use.amount / product.basis.amount
 }
 
 /** What this shelf option costs the player, in calories, for this dish. */
 export function optionKcal(product: Product, use: Qty): number {
-  return Math.round(product.kcal * useRatio(product, use))
+  return Math.round(product.kcal * portionRatio(product, use))
 }
 
 /** Full nutrition for one shelf option at the amount the dish uses. */
 export function optionNutrition(product: Product, use: Qty): CartTotals {
-  const r = useRatio(product, use)
+  const r = portionRatio(product, use)
   return {
     kcal: Math.round(product.kcal * r),
     protein: round1(product.protein * r),

@@ -1,0 +1,192 @@
+import { useEffect, useState } from 'react'
+import { BudgetBar } from '../components/BudgetBar'
+import { ProductCard } from '../components/ProductCard'
+import { RollButton } from '../components/RollButton'
+import { SlotProgress } from '../components/SlotProgress'
+import { VotePanel } from '../components/VotePanel'
+import { getDish } from '../data/dishes'
+import { CATALOG } from '../data/products'
+import { buildCart, cartTotals, formatQty, optionKcal } from '../engine/cart'
+import { pick } from '../engine/random'
+import { pickerFor } from '../state/gameReducer'
+import { useGame } from '../state/GameContext'
+import { seatColor } from '../components/PlayerChips'
+
+/**
+ * The shop: one ingredient at a time, several varieties of it, and a budget
+ * that keeps count. This screen is the game.
+ */
+export function Store() {
+  const { state, dispatch } = useGame()
+  const [preview, setPreview] = useState<number | undefined>(undefined)
+  const [voting, setVoting] = useState(false)
+
+  const current = state.current
+  const dish = current?.dishId ? getDish(current.dishId) : undefined
+  const slot = dish?.slots[current?.slotIndex ?? 0]
+
+  // Each ingredient starts at the top of the screen. Without this, tapping an
+  // option near the bottom of a long shelf leaves the page scrolled and the
+  // sticky budget bar sitting over the next ingredient's question.
+  const slotIndex = current?.slotIndex
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' })
+  }, [slotIndex])
+
+  if (!current || !dish || !slot) return null
+
+  // The running total excludes the slot being decided, so re-choosing an
+  // ingredient you already picked doesn't double-count it on the bar.
+  const committed = buildCart(dish, { ...current.choices, [slot.id]: null }, CATALOG)
+  const spent = cartTotals(committed).kcal
+  const chosen = current.choices[slot.id]
+
+  const picker = pickerFor(state)
+  const pickerIndex = picker ? state.players.findIndex((p) => p.id === picker.id) : -1
+
+  function choose(optionId: string | null) {
+    setPreview(undefined)
+    dispatch({ type: 'CHOOSE_OPTION', slotId: slot!.id, optionId })
+  }
+
+  const isLastSlot = current.slotIndex === dish.slots.length - 1
+
+  return (
+    <div className="screen screen-store">
+      <BudgetBar
+        slot={current.slot}
+        spent={spent}
+        budget={current.budget}
+        banked={state.banked}
+        preview={preview}
+      />
+
+      <div className="store-head">
+        <p className="eyebrow">
+          {dish.emoji} {dish.name}
+        </p>
+        <h1>{slot.prompt}</h1>
+        {!slot.optional && (
+          <p className="store-required">
+            {slot.label} is core to this dish — you can still leave it out, but it won't be quite
+            the same thing.
+          </p>
+        )}
+      </div>
+
+      <SlotProgress
+        slots={dish.slots}
+        currentIndex={current.slotIndex}
+        choices={current.choices}
+        onJump={(index) => dispatch({ type: 'GOTO_INGREDIENT', index })}
+      />
+
+      {picker && !voting && (
+        <div className="picker-banner" style={{ '--seat': seatColor(pickerIndex) } as React.CSSProperties}>
+          <span className="player-chip-dot" aria-hidden="true" />
+          <span>
+            <strong>{picker.profile.name}</strong> is picking this one. Everyone gets a say —
+            only they get to tap.
+          </span>
+        </div>
+      )}
+
+      {voting ? (
+        <VotePanel
+          title={slot.label}
+          choices={slot.options.map((option) => {
+            const product = CATALOG[option.productId]!
+            return {
+              id: option.id,
+              label: `${product.name} · ${optionKcal(product, option.use)} cal`,
+              sublabel: `${product.pack} — uses ${formatQty(option.use)}`,
+            }
+          })}
+          players={state.players}
+          onResolve={(id) => {
+            setVoting(false)
+            choose(id)
+          }}
+          onCancel={() => setVoting(false)}
+        />
+      ) : (
+        <div className="shelf">
+          {slot.options.map((option) => {
+            const product = CATALOG[option.productId]
+            if (!product) return null
+            return (
+              <ProductCard
+                key={option.id}
+                option={option}
+                product={product}
+                selected={chosen === option.id}
+                spent={spent}
+                budget={current.budget}
+                onSelect={() => choose(option.id)}
+                onPreview={setPreview}
+              />
+            )
+          })}
+
+          <button
+            type="button"
+            className={`product product-skip${chosen === null ? ' product-selected' : ''}`}
+            onClick={() => choose(null)}
+            aria-pressed={chosen === null}
+          >
+            <span className="product-emoji" aria-hidden="true">
+              🚫
+            </span>
+            <span className="product-body">
+              <span className="product-name">Leave it out</span>
+              <span className="product-use">
+                {slot.optional
+                  ? 'Not everything needs to go in the cart.'
+                  : "You'll notice it missing — but it's free."}
+              </span>
+            </span>
+            <span className="product-price">
+              <strong className="num">0</strong>
+              <span className="product-price-unit">cal</span>
+            </span>
+          </button>
+        </div>
+      )}
+
+      {!voting && (
+        <div className="btn-row store-actions">
+          <RollButton
+            label="Pick one for me"
+            onRoll={() => {
+              const option = pick(slot.options)
+              if (option) choose(option.id)
+            }}
+          />
+          {state.mode === 'coop' && state.players.length > 1 && (
+            <button type="button" className="btn btn-ghost" onClick={() => setVoting(true)}>
+              🗳️ Call a vote
+            </button>
+          )}
+          {current.slotIndex > 0 && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => dispatch({ type: 'GOTO_INGREDIENT', index: current.slotIndex - 1 })}
+            >
+              ← Back
+            </button>
+          )}
+          {isLastSlot && slot.id in current.choices && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => dispatch({ type: 'REVIEW_CART' })}
+            >
+              Go to the checkout →
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
