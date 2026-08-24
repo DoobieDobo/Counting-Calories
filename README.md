@@ -21,6 +21,26 @@ Same dish. Same slot. A six-fold difference. That's the game.
 
 ---
 
+## Play it
+
+**Easiest — nothing to install:** <https://claude.ai/code/artifact/bc528df3-e281-4bed-908a-f4eb35d599dc>
+
+A snapshot of the whole game in one page. Works on a phone. It doesn't track this
+repo, so it needs republishing after changes — see *A single-file build* below.
+
+**Permanent URL:** <https://doobiedobo.github.io/Counting-Calories/> — updates on
+every push, once Pages is switched on (Settings → Pages → Source: **GitHub
+Actions**). Until someone does that once, this link 404s.
+
+**Locally:**
+
+```sh
+npm install
+npm run dev
+```
+
+---
+
 ## Playing
 
 - **A run is one day** — breakfast, lunch, dinner. Each meal draws its share of
@@ -52,6 +72,20 @@ npm run build
 
 No server, no API keys, no accounts. Everything runs in the browser and the
 food data ships with the app.
+
+### A single-file build
+
+```sh
+npm run build:standalone
+```
+
+The game makes no external requests — no CDN, no web fonts, no `fetch` — so it
+folds into one self-contained file. `scripts/inline-build.mjs` writes two:
+
+- `dist/standalone.html` — a complete document, ~294 KB. Open it straight from
+  disk, email it, drop it on any static host.
+- `dist/artifact.html` — the same thing without the `<!doctype>`/`<html>`/`<body>`
+  wrapper, for hosts that supply their own.
 
 ## How it's put together
 
