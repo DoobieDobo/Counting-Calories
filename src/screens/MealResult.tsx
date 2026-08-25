@@ -1,7 +1,7 @@
 import { MacroBar } from '../components/MacroBar'
 import { seatColor } from '../components/PlayerChips'
 import { MEAL_LABELS } from '../engine/calories'
-import { RUN_MEALS } from '../state/gameReducer'
+import { RUN_MEALS, mealShares } from '../state/gameReducer'
 import { useGame } from '../state/GameContext'
 
 export function MealResult() {
@@ -11,8 +11,7 @@ export function MealResult() {
 
   const { verdict } = meal
   const isLastMeal = state.mealIndex >= RUN_MEALS.length - 1
-  // One portion each, so a player's share is the meal divided by the table.
-  const share = meal.servings > 1 ? Math.round(meal.totals.kcal / meal.servings) : null
+  const shares = mealShares(state.players, meal.slot, meal.totals.kcal)
 
   return (
     <div className="screen">
@@ -68,22 +67,33 @@ export function MealResult() {
         </ul>
       </div>
 
-      {share !== null && (
+      {shares.length > 1 && (
         <div className="card split-card">
-          <h3>A portion each</h3>
+          <h3>Who ate what</h3>
           <ul className="split-list">
-            {state.players.map((player, i) => (
-              <li key={player.id} style={{ '--seat': seatColor(i) } as React.CSSProperties}>
-                <span className="player-chip-dot" aria-hidden="true" />
-                <span>{player.profile.name}</span>
-                <strong className="num">{share.toLocaleString()}</strong>
-              </li>
-            ))}
+            {shares.map(({ player, kcal, budget }, i) => {
+              const over = kcal > budget
+              return (
+                <li key={player.id} style={{ '--seat': seatColor(i) } as React.CSSProperties}>
+                  <span className="player-chip-dot" aria-hidden="true" />
+                  <span className="split-name">{player.profile.name}</span>
+                  <span className="split-bar" aria-hidden="true">
+                    <span
+                      className={over ? 'over' : ''}
+                      style={{ width: `${Math.min(100, (kcal / Math.max(1, budget)) * 100)}%` }}
+                    />
+                  </span>
+                  <strong className="num">{kcal.toLocaleString()}</strong>
+                  <span className="split-of num">of {budget.toLocaleString()}</span>
+                </li>
+              )
+            })}
           </ul>
           <p className="lede">
             You cooked {meal.servings} servings for{' '}
-            <strong className="num">{meal.totals.kcal.toLocaleString()}</strong> calories, so
-            that's what each of you is actually eating.
+            <strong className="num">{meal.totals.kcal.toLocaleString()}</strong> calories, split
+            in proportion to what each of you actually needs — so everyone's plate is measured
+            against their own budget, not an average nobody is on.
           </p>
         </div>
       )}

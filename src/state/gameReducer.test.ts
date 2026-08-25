@@ -9,7 +9,9 @@ import {
   gameReducer,
   initialState,
   mealPot,
+  mealShares,
   pickerFor,
+  playerMealBudget,
   picksBefore,
   soleMenuFor,
   tableConcerns,
@@ -339,6 +341,79 @@ describe('dietary concerns across the table', () => {
       { type: 'ADD_PLAYER', profile: legacy },
     ])
     expect(tableConcerns(state.players)).toEqual([])
+  })
+})
+
+describe('portions follow appetite, not headcount', () => {
+  /** A big eater and a small one, so an equal split would be obviously wrong. */
+  const unevenTable = (): GameState =>
+    run([
+      { type: 'SET_MODE', mode: 'coop' },
+      { type: 'ADD_PLAYER', profile: profile({ name: 'Big', heightCm: 190, weightKg: 95, age: 25, sex: 'male', activity: 'athlete' }) },
+      { type: 'ADD_PLAYER', profile: profile({ name: 'Small', heightCm: 155, weightKg: 48, age: 60, sex: 'female', activity: 'sedentary' }) },
+      { type: 'START_RUN' },
+    ])
+
+  it('gives the bigger target the bigger plate', () => {
+    const state = unevenTable()
+    const [big, small] = mealShares(state.players, 'dinner', 1000)
+    expect(big!.kcal).toBeGreaterThan(small!.kcal)
+    // And in the same ratio as their budgets, not merely bigger.
+    expect(big!.kcal / small!.kcal).toBeCloseTo(big!.budget / small!.budget, 1)
+  })
+
+  it('splits evenly when the targets happen to match', () => {
+    const twins = run([
+      { type: 'SET_MODE', mode: 'coop' },
+      { type: 'ADD_PLAYER', profile: profile({ name: 'A' }) },
+      { type: 'ADD_PLAYER', profile: profile({ name: 'B' }) },
+      { type: 'START_RUN' },
+    ])
+    const shares = mealShares(twins.players, 'dinner', 900)
+    expect(shares.map((s) => s.kcal)).toEqual([450, 450])
+  })
+
+  it('always adds back up to exactly what was cooked', () => {
+    // Largest-remainder rounding: naive rounding drops or invents calories,
+    // which reads as a bug on something presented as a receipt.
+    const state = unevenTable()
+    for (const total of [0, 1, 7, 333, 998, 1001, 2500]) {
+      const shares = mealShares(state.players, 'dinner', total)
+      expect(shares.reduce((sum, s) => sum + s.kcal, 0), `total ${total}`).toBe(total)
+    }
+  })
+
+  it('adds up across a full six-player table too', () => {
+    let state = run([{ type: 'SET_MODE', mode: 'coop' }])
+    for (let i = 0; i < 6; i++) {
+      state = gameReducer(state, {
+        type: 'ADD_PLAYER',
+        profile: profile({ name: `P${i}`, weightKg: 50 + i * 9, age: 20 + i * 7 }),
+      })
+    }
+    state = gameReducer(state, { type: 'START_RUN' })
+    for (const total of [1, 999, 4321]) {
+      const shares = mealShares(state.players, 'lunch', total)
+      expect(shares.reduce((sum, s) => sum + s.kcal, 0), `total ${total}`).toBe(total)
+      expect(shares).toHaveLength(6)
+    }
+  })
+
+  it('reports each plate against that player’s own budget', () => {
+    const state = unevenTable()
+    for (const share of mealShares(state.players, 'dinner', 1200)) {
+      expect(share.budget).toBe(playerMealBudget(share.player, 'dinner'))
+    }
+  })
+
+  it('returns nothing for an empty table rather than dividing by zero', () => {
+    expect(mealShares([], 'dinner', 500)).toEqual([])
+  })
+
+  it('sums the same budgets the pot is built from', () => {
+    const state = unevenTable()
+    const fromShares = mealShares(state.players, 'dinner', 0).reduce((s, x) => s + x.budget, 0)
+    expect(fromShares).toBe(mealPot(state.players, 'dinner', 0))
   })
 })
 

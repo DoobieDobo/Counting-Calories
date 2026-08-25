@@ -137,6 +137,68 @@ export function dayTarget(players: readonly Player[]): number {
   return players.reduce((sum, p) => sum + p.target.target, 0)
 }
 
+/** What one player's own share of a meal's budget is, before any rollover. */
+export function playerMealBudget(player: Player, slot: MealSlot): number {
+  return mealBudgets(player.target.target, RUN_MEALS)[slot]
+}
+
+export interface MealShare {
+  player: Player
+  /** Calories from this meal that end up on their plate. */
+  kcal: number
+  /** Their own budget for this meal, so the share means something on its own. */
+  budget: number
+}
+
+/**
+ * Splits a cooked meal across the table in proportion to each player's own
+ * calorie target.
+ *
+ * Everyone puts a different amount into the pot — the budget has always been
+ * the sum of each player's share — so dividing the food equally afterwards
+ * contradicted that. Someone on 2,600 a day eats more of the pot than someone
+ * on 1,300, and their plate is judged against their own budget rather than an
+ * average nobody is on.
+ *
+ * Uses largest-remainder rounding so the plates add back up to exactly what was
+ * cooked; naive rounding loses or invents a calorie or two, which looks like a
+ * bug on a receipt.
+ */
+export function mealShares(
+  players: readonly Player[],
+  slot: MealSlot,
+  totalKcal: number,
+): MealShare[] {
+  if (players.length === 0) return []
+
+  const budgets = players.map((p) => playerMealBudget(p, slot))
+  const pot = budgets.reduce((a, b) => a + b, 0)
+
+  // Degenerate case: no appetite at all. Split evenly rather than divide by zero.
+  if (pot <= 0) {
+    const even = Math.round(totalKcal / players.length)
+    return players.map((player, i) => ({ player, kcal: even, budget: budgets[i]! }))
+  }
+
+  const exact = budgets.map((b) => (totalKcal * b) / pot)
+  const floors = exact.map((n) => Math.floor(n))
+  let leftover = totalKcal - floors.reduce((a, b) => a + b, 0)
+
+  // Hand the remaining whole calories to whoever was rounded down hardest.
+  const order = exact
+    .map((n, i) => ({ i, fraction: n - Math.floor(n) }))
+    .sort((a, b) => b.fraction - a.fraction)
+
+  const kcal = [...floors]
+  for (const { i } of order) {
+    if (leftover <= 0) break
+    kcal[i]! += 1
+    leftover -= 1
+  }
+
+  return players.map((player, i) => ({ player, kcal: kcal[i]!, budget: budgets[i]! }))
+}
+
 /**
  * Every dietary concern anyone at the table has switched on.
  *

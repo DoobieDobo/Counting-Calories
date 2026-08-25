@@ -692,13 +692,46 @@
 }
 
 .split-list li {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(60px, auto) 1fr auto auto;
   align-items: center;
   gap: 10px;
 }
 
-.split-list li strong {
-  margin-left: auto;
+.split-name {
+  font-weight: 600;
+}
+
+.split-bar {
+  height: 9px;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  overflow: hidden;
+}
+
+.split-bar span {
+  display: block;
+  height: 100%;
+  background: var(--seat, var(--accent));
+}
+
+.split-bar span.over {
+  background: var(--danger);
+}
+
+.split-of {
+  color: var(--text-faint);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 560px) {
+  .split-list li {
+    grid-template-columns: auto 1fr auto auto;
+  }
+
+  .split-bar {
+    display: none;
+  }
 }
 
 .day-meal-list li {
