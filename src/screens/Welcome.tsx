@@ -1,7 +1,10 @@
 import { useGame } from '../state/GameContext'
+import { loadRounds } from '../state/rounds'
 
 export function Welcome() {
   const { dispatch } = useGame()
+  // Read once on mount: nothing on this screen can change the archive.
+  const saved = loadRounds().length
 
   return (
     <div className="screen screen-welcome">
@@ -41,6 +44,15 @@ export function Welcome() {
         <button type="button" className="btn" onClick={() => dispatch({ type: 'GOTO', phase: 'mode' })}>
           Start shopping
         </button>
+        {saved > 0 && (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => dispatch({ type: 'GOTO', phase: 'saved' })}
+          >
+            Saved rounds ({saved})
+          </button>
+        )}
       </div>
 
       <p className="disclaimer">

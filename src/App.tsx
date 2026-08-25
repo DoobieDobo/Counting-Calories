@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { Sidebar } from './components/Sidebar'
 import { BudgetReveal } from './screens/BudgetReveal'
 import { Cart } from './screens/Cart'
 import { DayResult } from './screens/DayResult'
@@ -9,6 +10,7 @@ import { ModeSelect } from './screens/ModeSelect'
 import { PlanReport } from './screens/PlanReport'
 import { ProfileForm } from './screens/ProfileForm'
 import { Roster } from './screens/Roster'
+import { SavedRounds } from './screens/SavedRounds'
 import { Store } from './screens/Store'
 import { Welcome } from './screens/Welcome'
 import { useGame } from './state/GameContext'
@@ -22,9 +24,20 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'auto' })
   }, [state.phase])
 
-  switch (state.phase) {
-    case 'welcome':
-      return <Welcome />
+  // The landing page is its own full-width thing, and there is nothing to
+  // navigate away from yet.
+  if (state.phase === 'welcome') return <Welcome />
+
+  return (
+    <div className="app-shell">
+      <Sidebar />
+      <main className="app-main">{screenFor(state.phase)}</main>
+    </div>
+  )
+}
+
+function screenFor(phase: ReturnType<typeof useGame>['state']['phase']) {
+  switch (phase) {
     case 'mode':
       return <ModeSelect />
     case 'profile':
@@ -46,8 +59,16 @@ export function App() {
     case 'day-result':
       return <DayResult />
     case 'plan-report':
-      return <PlanReport />
+      return <LiveReport />
+    case 'saved':
+      return <SavedRounds />
     default:
       return <Welcome />
   }
+}
+
+/** The report for the round just finished, as opposed to one off the shelf. */
+function LiveReport() {
+  const { state } = useGame()
+  return <PlanReport days={state.days} players={state.players} />
 }

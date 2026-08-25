@@ -78,6 +78,7 @@
   --font-num: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
 
   --max-width: 940px;
+  --rail-width: 218px;
 }
 
 /*
@@ -167,6 +168,24 @@ button:disabled {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── The shell ─────────────────────────────────────────────────────────── */
+
+/*
+ * A rail beside the screen on a wide window, a sheet over it on a narrow one.
+ * `body` stays the scroll container either way — making `.app-main` scroll
+ * instead would break the store's sticky budget bar and the scroll-to-top on
+ * every phase change, neither of which is obvious until you play a round.
+ */
+.app-shell {
+  min-height: 100vh;
+}
+
+@media (min-width: 900px) {
+  .app-main {
+    padding-left: var(--rail-width);
   }
 }
 

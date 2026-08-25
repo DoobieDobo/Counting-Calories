@@ -38,6 +38,7 @@ export type Phase =
   | 'meal-result'
   | 'day-result'
   | 'plan-report'
+  | 'saved'
 
 export interface Player {
   id: string
@@ -103,6 +104,13 @@ export interface GameState {
    * empty list is genuinely the right answer for those, not a silent bug.
    */
   days: CompletedDay[]
+  /**
+   * Identity of the round being played, minted when it starts.
+   *
+   * The archive upserts on this. Without it the effect that files a finished
+   * round would shelve a fresh copy on every re-render of the report.
+   */
+  roundId: string
 }
 
 export type Action =
@@ -132,6 +140,7 @@ export const initialState: GameState = {
   history: [],
   banked: 0,
   days: [],
+  roundId: 'round-0',
 }
 
 let playerCounter = 0
@@ -139,6 +148,18 @@ let playerCounter = 0
 function makePlayerId(): string {
   playerCounter += 1
   return `player-${playerCounter}`
+}
+
+let roundCounter = 0
+
+/**
+ * A new identity for a new round. Includes the clock so two rounds started in
+ * separate sessions — the counter restarts with the page — can never collide in
+ * the archive and overwrite each other.
+ */
+function makeRoundId(): string {
+  roundCounter += 1
+  return `round-${Date.now()}-${roundCounter}`
 }
 
 /**
@@ -330,6 +351,14 @@ export function gameReducer(state: GameState, action: Action): GameState {
         banked: 0,
         current: null,
         phase: 'menu',
+        // Starting a run starts the block. This used to leave `days` alone,
+        // which was harmless only because nothing could reach the roster
+        // mid-block; the sidebar can. Adding a player changes every budget and
+        // every portion, so days banked under the old table cannot be carried
+        // into the new one — their shopping list would be split across people
+        // who never ate those meals.
+        days: [],
+        roundId: makeRoundId(),
       }
       const meal = startMeal(fresh, 0)
       return { ...fresh, current: meal, phase: phaseForMeal(meal) }
@@ -465,7 +494,13 @@ export function gameReducer(state: GameState, action: Action): GameState {
     }
 
     case 'RESTART':
-      return { ...initialState, players: state.players, mode: state.mode, phase: 'budget' }
+      return {
+        ...initialState,
+        players: state.players,
+        mode: state.mode,
+        phase: 'budget',
+        roundId: makeRoundId(),
+      }
 
     default:
       return state

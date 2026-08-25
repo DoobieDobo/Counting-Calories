@@ -339,6 +339,40 @@ describe('a three-day block', () => {
     expect(state.players).toHaveLength(1)
     expect(state.phase).toBe('budget')
   })
+
+  it('never lets a changed table inherit days it did not eat', () => {
+    // Going back to the roster and starting again used to keep the banked days
+    // while every budget and every portion changed underneath them — the
+    // shopping list would have been split across someone who was not there.
+    let state = gameReducer(playDay(soloStart()), { type: 'FINISH_DAY' })
+    expect(state.days).toHaveLength(1)
+
+    state = gameReducer(state, { type: 'GOTO', phase: 'roster' })
+    state = gameReducer(state, { type: 'ADD_PLAYER', profile: profile({ name: 'Sam' }) })
+    state = gameReducer(state, { type: 'START_RUN' })
+
+    expect(state.days).toHaveLength(0)
+    expect(state.history).toHaveLength(0)
+    expect(state.banked).toBe(0)
+  })
+
+  it('gives each round its own identity, so the archive cannot overwrite one', () => {
+    const first = gameReducer(playDay(soloStart()), { type: 'FINISH_DAY' })
+    const second = gameReducer(first, { type: 'RESTART' })
+    const third = gameReducer(second, { type: 'START_RUN' })
+
+    expect(second.roundId).not.toBe(first.roundId)
+    expect(third.roundId).not.toBe(second.roundId)
+  })
+
+  it('keeps a round identity steady while it is being played', () => {
+    // The archive upserts on it, so a shifting id would shelve a new copy of
+    // the same round on every day played.
+    const start = soloStart()
+    const afterDay = playDay(start)
+    expect(afterDay.roundId).toBe(start.roundId)
+    expect(gameReducer(afterDay, { type: 'FINISH_DAY' }).roundId).toBe(start.roundId)
+  })
 })
 
 describe('co-op servings', () => {

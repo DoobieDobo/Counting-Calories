@@ -14,38 +14,48 @@ import {
   portionWeights,
   tableConcerns,
 } from '../state/gameReducer'
-import type { CompletedDay } from '../state/gameReducer'
+import type { CompletedDay, Player } from '../state/gameReducer'
 import { useGame } from '../state/GameContext'
 import { clear } from '../state/persistence'
+
+interface Props {
+  days: readonly CompletedDay[]
+  players: readonly Player[]
+  /**
+   * Set when reading a round back out of the archive rather than finishing one.
+   * The report is otherwise identical: it was always a pure function of the
+   * days and the table, so an old round renders through the same code.
+   */
+  saved?: { finishedAt: number; onBack: () => void }
+}
 
 /**
  * What you get for finishing three days: the plan you built, the shopping list
  * behind it, what the three days say about how you shop, and a suggested next
  * three days assembled from what actually worked.
  */
-export function PlanReport() {
-  const { state, dispatch } = useGame()
+export function PlanReport({ days, players, saved }: Props) {
+  const { dispatch } = useGame()
   // Collapsed by default: the list is for shopping, and shopping wants one
   // number per ingredient. Whose share is whose only matters at the stove.
   // Declared before the early return — a hook cannot run conditionally.
   const [showShares, setShowShares] = useState(false)
 
-  const days = state.days
   if (days.length === 0) return null
 
   // A solo shopper has nothing to divide, so they keep the plain list.
-  const split = state.players.length > 1
-  const columns = tableColumns(state.players.length, showShares)
-  const aisles = shoppingByAisle(days, split ? portionWeights(state.players) : [])
+  const split = players.length > 1
+  const columns = tableColumns(players.length, showShares)
+  const aisles = shoppingByAisle(days, split ? portionWeights(players) : [])
   const listTotal = shoppingTotal(days)
-  const concerns = tableConcerns(state.players)
-  const plan = suggestPlan(days, state.players, concerns)
+  const concerns = tableConcerns(players)
+  const plan = suggestPlan(days, players, concerns)
   const patterns = findPatterns(days)
 
   const allMeals = days.flatMap((d) => d.meals)
   // Every meal in a block is cooked for the same table, so the first one speaks
   // for all of them; the roster is the fallback for an oddly-shaped save.
-  const servings = allMeals[0]?.servings ?? Math.max(1, state.players.length)
+  const servings = allMeals[0]?.servings ?? Math.max(1, players.length)
   const totals = allMeals.reduce(
     (acc, m) => ({
       kcal: acc.kcal + m.totals.kcal,
@@ -55,12 +65,15 @@ export function PlanReport() {
     }),
     { kcal: 0, protein: 0, carbs: 0, fat: 0 },
   )
-  const target = dayTarget(state.players) * days.length
+  const target = dayTarget(players) * days.length
 
   return (
     <div className="screen report">
       <div className="screen-head">
-        <p className="eyebrow">{days.length} days · meal plan</p>
+        <p className="eyebrow">
+          {days.length} days · meal plan
+          {saved && ` · cooked ${whenFinished(saved.finishedAt)}`}
+        </p>
         <h1>What you cooked, and what to buy</h1>
         <p className="lede">
           {allMeals.length} meals across {days.length} days. Everything below adds up to one
@@ -69,6 +82,11 @@ export function PlanReport() {
       </div>
 
       <div className="btn-row report-actions">
+        {saved && (
+          <button type="button" className="btn btn-ghost" onClick={saved.onBack}>
+            ← All saved rounds
+          </button>
+        )}
         <button type="button" className="btn btn-secondary" onClick={() => window.print()}>
           🖨️ Print or save as PDF
         </button>
@@ -183,7 +201,7 @@ export function PlanReport() {
                     <col style={{ width: `${columns.item}%` }} />
                     <col style={{ width: `${columns.total}%` }} />
                     {showShares &&
-                      state.players.map((p) => (
+                      players.map((p) => (
                         <col key={p.id} style={{ width: `${columns.share}%` }} />
                       ))}
                   </colgroup>
@@ -194,7 +212,7 @@ export function PlanReport() {
                         Total
                       </th>
                       {showShares &&
-                        state.players.map((p) => (
+                        players.map((p) => (
                           <th key={p.id} scope="col" className="aisle-share-head">
                             {p.profile.name}
                           </th>
@@ -227,7 +245,7 @@ export function PlanReport() {
                         </td>
                         {showShares &&
                           line.perPlayer.map((share, i) => (
-                            <td key={state.players[i]?.id ?? i} className="num aisle-share">
+                            <td key={players[i]?.id ?? i} className="num aisle-share">
                               {formatShare(share)}
                             </td>
                           ))}
@@ -281,7 +299,12 @@ export function PlanReport() {
         </section>
       )}
 
-      {/* ── Suggested next block ─────────────────────────────────────────── */}
+      {/*
+        ── Suggested next block ───────────────────────────────────────────
+        Only on a round you have just finished. On one pulled off the shelf
+        it would be advice about what to cook after a week you already ate.
+      */}
+      {!saved && (
       <section className="card report-section">
         <h2>Suggested next {PLAN_DAYS} days</h2>
         <p className="lede">
@@ -317,7 +340,15 @@ export function PlanReport() {
           comes to is the part you play.
         </p>
       </section>
+      )}
 
+      {saved ? (
+        <div className="btn-row report-actions">
+          <button type="button" className="btn" onClick={saved.onBack}>
+            ← All saved rounds
+          </button>
+        </div>
+      ) : (
       <div className="btn-row report-actions">
         <button type="button" className="btn" onClick={() => dispatch({ type: 'RESTART' })}>
           Cook the next {PLAN_DAYS} days
@@ -333,8 +364,22 @@ export function PlanReport() {
           Start over from scratch
         </button>
       </div>
+      )}
     </div>
   )
+}
+
+/** "today", "yesterday", or the date — enough to tell two rounds apart. */
+function whenFinished(at: number): string {
+  const day = new Date(at)
+  const today = new Date()
+  const midnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const daysAgo = Math.round((midnight(today) - midnight(day)) / 86_400_000)
+
+  if (daysAgo <= 0) return 'today'
+  if (daysAgo === 1) return 'yesterday'
+  if (daysAgo < 7) return `${daysAgo} days ago`
+  return day.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 }
 
 /**
