@@ -108,6 +108,26 @@
   color: var(--text-faint);
 }
 
+/* Abandoning a run is deliberately quiet — present, but never the obvious tap. */
+.abandon-trigger {
+  margin-left: auto;
+  font-size: 0.88rem;
+  color: var(--text-faint);
+}
+
+.abandon {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.abandon-ask {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
 /* ── Macro bar ─────────────────────────────────────────────────────────── */
 
 .macro {

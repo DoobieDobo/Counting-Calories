@@ -10,7 +10,14 @@
 import { getDish } from '../data/dishes'
 import { RUN_MEALS, initialState, type GameState } from './gameReducer'
 
-const KEY = 'counting-calories:run:v1'
+/**
+ * Bump this whenever the saved shape changes. A stale run that still passes
+ * validation is worse than no run at all: when `servings` was added, v1 saves
+ * rehydrated with it undefined, every consumer took the `= 1` default, and the
+ * bug that release had just fixed came silently back.
+ */
+const KEY = 'counting-calories:run:v2'
+const RETIRED_KEYS = ['counting-calories:run:v1']
 
 export function save(state: GameState): void {
   try {
@@ -23,6 +30,7 @@ export function save(state: GameState): void {
 
 export function load(): GameState | null {
   try {
+    for (const old of RETIRED_KEYS) localStorage.removeItem(old)
     const raw = localStorage.getItem(KEY)
     if (!raw) return null
     const parsed: unknown = JSON.parse(raw)
@@ -35,6 +43,7 @@ export function load(): GameState | null {
 export function clear(): void {
   try {
     localStorage.removeItem(KEY)
+    for (const old of RETIRED_KEYS) localStorage.removeItem(old)
   } catch {
     // See save().
   }
@@ -59,9 +68,13 @@ function isValid(value: unknown): value is GameState {
     if (s.current.dishId && !getDish(s.current.dishId)) return false
     if (typeof s.current.slotIndex !== 'number' || s.current.slotIndex < 0) return false
     if (typeof s.current.budget !== 'number') return false
+    // Missing `servings` means a save from before recipes scaled to the table.
+    // Resuming it would quietly restore the single-serving pricing bug.
+    if (typeof s.current.servings !== 'number' || s.current.servings < 1) return false
   }
   for (const meal of s.history) {
     if (!meal?.dishId || !getDish(meal.dishId)) return false
+    if (typeof meal.servings !== 'number' || meal.servings < 1) return false
   }
 
   return true

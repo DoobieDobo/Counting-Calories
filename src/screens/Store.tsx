@@ -193,8 +193,39 @@ export function Store() {
               Go to the checkout →
             </button>
           )}
+          <AbandonRun />
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * A way out of a run mid-game. Without it the only reset lives on the day
+ * summary, three finished meals away — which meant a run you no longer wanted
+ * (or one restored from an old save) was effectively a trap.
+ */
+function AbandonRun() {
+  const { dispatch } = useGame()
+  const [confirming, setConfirming] = useState(false)
+
+  if (confirming) {
+    return (
+      <span className="abandon">
+        <span className="abandon-ask">Abandon this run?</span>
+        <button type="button" className="btn btn-ghost" onClick={() => dispatch({ type: 'RESTART' })}>
+          Yes, start over
+        </button>
+        <button type="button" className="btn btn-ghost" onClick={() => setConfirming(false)}>
+          Keep shopping
+        </button>
+      </span>
+    )
+  }
+
+  return (
+    <button type="button" className="btn btn-ghost abandon-trigger" onClick={() => setConfirming(true)}>
+      Start a new run
+    </button>
   )
 }

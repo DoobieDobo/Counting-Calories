@@ -55,10 +55,35 @@ const js = findAsset('.js')
  */
 const safeJs = js.replaceAll('</script', '<\\/script')
 
+/**
+ * Always insert via a replacer *function*.
+ *
+ * `String.prototype.replace` interprets `$&`, `` $` ``, `$'` and `$1` inside a
+ * replacement *string* as substitution patterns. Minified bundles contain those
+ * sequences: this one has three `$&`, and each one silently expanded to the
+ * matched `</body>`, injecting a literal `<` into the middle of the JavaScript.
+ * The build succeeded, the file looked the right size, and the page was blank
+ * with `Unexpected token '<'`. A function replacer takes its return value
+ * verbatim, so `$` means `$`.
+ */
+const insert = (text) => () => text
+
 const inlined = html
   .replace(/\s*<script type="module"[^>]*src="[^"]*"[^>]*><\/script>/, '')
-  .replace(/\s*<link rel="stylesheet"[^>]*>/, `\n    <style>\n${css}\n    </style>`)
-  .replace('</body>', `  <script type="module">\n${safeJs}\n    </script>\n  </body>`)
+  .replace(/\s*<link rel="stylesheet"[^>]*>/, insert(`\n    <style>\n${css}\n    </style>`))
+  .replace('</body>', insert(`  <script type="module">\n${safeJs}\n    </script>\n  </body>`))
+
+// Prove the payloads survived intact rather than trusting that they did — this
+// is the check that would have caught the `$&` corruption immediately.
+if (!inlined.includes(safeJs)) {
+  throw new Error('Inlined JS does not match the bundle — the script was altered during insertion.')
+}
+if (!inlined.includes(css)) {
+  throw new Error('Inlined CSS does not match the bundle — the stylesheet was altered during insertion.')
+}
+if (/<script[^>]*\ssrc=/.test(inlined) || /<link[^>]*rel="stylesheet"/.test(inlined)) {
+  throw new Error('An external asset reference survived inlining; the file is not self-contained.')
+}
 
 writeFileSync(join(DIST, 'standalone.html'), inlined)
 
