@@ -794,12 +794,304 @@
   color: var(--danger);
 }
 
+/* ── The three-day report ──────────────────────────────────────────────── */
+
+.report-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.report-section h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.report-actions {
+  margin-top: -6px;
+}
+
+/* The plan grid — days down, meals across. The bit for the fridge. */
+
+.plan-grid-wrap {
+  overflow-x: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.plan-grid {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+}
+
+.plan-grid th,
+.plan-grid td {
+  padding: 11px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+
+.plan-grid thead th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.plan-grid tbody th {
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.plan-grid tbody tr:last-child th,
+.plan-grid tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.plan-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.plan-dish {
+  font-weight: 600;
+}
+
+.plan-kcal,
+.plan-empty {
+  color: var(--text-faint);
+  font-size: 0.86rem;
+}
+
+.plan-grid .plan-total {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.plan-grid td.plan-total .day-meal-grade {
+  display: inline-grid;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* The shopping list — the part you can take with you. */
+
+.aisle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aisle h3 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.aisle-kcal {
+  font-weight: 600;
+  color: var(--text-faint);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.aisle-list {
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.aisle-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto 62px;
+  align-items: center;
+  gap: 12px;
+}
+
+.aisle-emoji {
+  font-size: 1.35rem;
+}
+
+.aisle-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.aisle-name {
+  font-weight: 600;
+}
+
+.aisle-for {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+.aisle-amount {
+  white-space: nowrap;
+}
+
+.aisle-line-kcal {
+  text-align: right;
+  color: var(--text-faint);
+  font-size: 0.88rem;
+}
+
+/* The suggested next block. */
+
+.suggest-days {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.suggest-day h3 {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.suggest-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suggest-list li {
+  display: grid;
+  grid-template-columns: 88px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--bg-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.suggest-slot {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.suggest-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.suggest-dish {
+  font-weight: 600;
+}
+
+.suggest-why {
+  font-size: 0.82rem;
+  color: var(--text-faint);
+}
+
+.suggest-range {
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ── Print ─────────────────────────────────────────────────────────────── */
+
+/*
+ * A shopping list you cannot take with you is half a feature. Printing gives
+ * the plan and the list a life off the screen — paper, or a PDF on a phone.
+ */
+@media print {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .report {
+    padding: 0;
+    gap: 18px;
+    max-width: none;
+  }
+
+  .report .card,
+  .report .suggest-list li {
+    box-shadow: none;
+    border: 1px solid #ccc;
+    background: #fff;
+  }
+
+  .report-section,
+  .aisle,
+  .suggest-day,
+  .plan-grid tr {
+    break-inside: avoid;
+  }
+
+  /* Buttons are screen furniture; paper wants the food. */
+  .btn-row {
+    display: none;
+  }
+
+  .plan-grid {
+    min-width: 0;
+  }
+
+  .plan-grid-wrap {
+    overflow: visible;
+  }
+}
+
 /* ── Narrow screens ────────────────────────────────────────────────────── */
 
 @media (max-width: 560px) {
   .screen {
     padding: 18px 14px 80px;
     gap: 20px;
+  }
+
+  .aisle-list li {
+    grid-template-columns: auto 1fr auto;
+    row-gap: 2px;
+  }
+
+  .aisle-line-kcal {
+    display: none;
+  }
+
+  .suggest-list li {
+    grid-template-columns: 1fr auto;
+    row-gap: 4px;
+  }
+
+  .suggest-slot {
+    grid-column: 1 / -1;
   }
 
   .budget-bar {

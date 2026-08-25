@@ -7,6 +7,7 @@ import { dishesForMenu } from '../data/dishes'
 import type { MenuId } from '../data/types'
 import { MEAL_LABELS } from '../engine/calories'
 import { pick } from '../engine/random'
+import { PLAN_DAYS, dayNumber } from '../state/gameReducer'
 import { useGame } from '../state/GameContext'
 
 export function MenuSelect() {
@@ -25,8 +26,9 @@ export function MenuSelect() {
     <div className="screen">
       <div className="screen-head">
         <p className="eyebrow">
-          {MEAL_LABELS[slot]} · <span className="num">{budget.toLocaleString()}</span> calories to
-          spend{servings > 1 && ` · ${servings} servings`}
+          Day {dayNumber(state)} of {PLAN_DAYS} · {MEAL_LABELS[slot]} ·{' '}
+          <span className="num">{budget.toLocaleString()}</span> calories to spend
+          {servings > 1 && ` · ${servings} servings`}
         </p>
         <h1>{state.mode === 'coop' ? 'Pick a menu together' : 'Pick a menu'}</h1>
         {state.banked > 0 && (

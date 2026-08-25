@@ -4,6 +4,7 @@ import { CATALOG } from '../data/products'
 import { buildCart, cartTotals } from '../engine/cart'
 import type { Profile } from '../engine/calories'
 import {
+  PLAN_DAYS,
   RUN_MEALS,
   dayTarget,
   gameReducer,
@@ -249,6 +250,93 @@ describe('checkout', () => {
     expect(state.players).toHaveLength(1)
     expect(state.history).toHaveLength(0)
     expect(state.banked).toBe(0)
+    expect(state.phase).toBe('budget')
+  })
+})
+
+describe('a three-day block', () => {
+  /** Plays every meal of one day and stops on the day summary. */
+  function playDay(from: GameState): GameState {
+    let state = from
+    for (let i = 0; i < RUN_MEALS.length; i++) {
+      state = gameReducer(state, {
+        type: 'CHOOSE_DISH',
+        dishId: state.current!.slot === 'breakfast' ? 'tapsilog' : 'adobo',
+      })
+      state = shopCheaply(state)
+      state = gameReducer(state, { type: 'CHECKOUT' })
+      state = gameReducer(state, { type: 'NEXT_MEAL' })
+    }
+    return state
+  }
+
+  it('banks each finished day and only reports after the third', () => {
+    let state = playDay(soloStart())
+
+    for (let day = 1; day <= PLAN_DAYS; day++) {
+      expect(state.phase, `end of day ${day}`).toBe('day-result')
+      state = gameReducer(state, { type: 'FINISH_DAY' })
+      expect(state.days, `after finishing day ${day}`).toHaveLength(day)
+
+      if (day < PLAN_DAYS) {
+        // Straight back into the shop for the next day, with a clean slate.
+        expect(state.phase, `start of day ${day + 1}`).not.toBe('plan-report')
+        expect(state.history).toHaveLength(0)
+        expect(state.banked).toBe(0)
+        state = playDay(state)
+      }
+    }
+
+    expect(state.phase).toBe('plan-report')
+  })
+
+  it('stores what each day cooked, so the report has something to show', () => {
+    const state = gameReducer(playDay(soloStart()), { type: 'FINISH_DAY' })
+    const day = state.days[0]!
+    expect(day.meals).toHaveLength(RUN_MEALS.length)
+    expect(day.target).toBe(dayTarget(state.players))
+    expect(day.verdict.kcal).toBe(day.meals.reduce((sum, m) => sum + m.totals.kcal, 0))
+  })
+
+  it('reports again on the next block rather than stopping at three days', () => {
+    let state = soloStart()
+    for (let i = 0; i < PLAN_DAYS; i++) state = gameReducer(playDay(state), { type: 'FINISH_DAY' })
+    expect(state.phase).toBe('plan-report')
+
+    state = gameReducer(state, { type: 'RESTART' })
+    expect(state.days).toHaveLength(0)
+
+    state = gameReducer(state, { type: 'START_RUN' })
+    for (let i = 0; i < PLAN_DAYS; i++) state = gameReducer(playDay(state), { type: 'FINISH_DAY' })
+    expect(state.phase).toBe('plan-report')
+    expect(state.days).toHaveLength(PLAN_DAYS)
+  })
+
+  it('ignores a finish with nothing cooked', () => {
+    const start = soloStart()
+    expect(gameReducer(start, { type: 'FINISH_DAY' })).toBe(start)
+  })
+
+  it('keeps the finished days when the day in progress is abandoned', () => {
+    // Binning two good days because the third went wrong would be miserable.
+    let state = gameReducer(playDay(soloStart()), { type: 'FINISH_DAY' })
+    state = gameReducer(state, { type: 'CHOOSE_DISH', dishId: 'tapsilog' })
+    state = shopCheaply(state)
+    state = gameReducer(state, { type: 'CHECKOUT' })
+
+    state = gameReducer(state, { type: 'ABANDON_DAY' })
+    expect(state.days).toHaveLength(1)
+    expect(state.history).toHaveLength(0)
+    expect(state.mealIndex).toBe(0)
+    expect(state.banked).toBe(0)
+    expect(state.phase).not.toBe('plan-report')
+  })
+
+  it('clears the whole block on a restart, but keeps the players', () => {
+    let state = gameReducer(playDay(soloStart()), { type: 'FINISH_DAY' })
+    state = gameReducer(state, { type: 'RESTART' })
+    expect(state.days).toHaveLength(0)
+    expect(state.players).toHaveLength(1)
     expect(state.phase).toBe('budget')
   })
 })

@@ -20,7 +20,7 @@ import {
   type Profile,
 } from '../engine/calories'
 import { buildCart, cartTotals, type Choices, type CartTotals } from '../engine/cart'
-import { gradeMeal, type MealVerdict } from '../engine/nutrition'
+import { gradeDay, gradeMeal, type DayVerdict, type MealVerdict } from '../engine/nutrition'
 
 export type Mode = 'solo' | 'coop'
 
@@ -36,6 +36,7 @@ export type Phase =
   | 'cart'
   | 'meal-result'
   | 'day-result'
+  | 'plan-report'
 
 export interface Player {
   id: string
@@ -45,6 +46,9 @@ export interface Player {
 
 /** The meal slots a run plays through, in order. */
 export const RUN_MEALS: readonly MealSlot[] = ['breakfast', 'lunch', 'dinner'] as const
+
+/** Days in a block. Finish this many and you get a meal plan report. */
+export const PLAN_DAYS = 3
 
 export interface CurrentMeal {
   slot: MealSlot
@@ -75,6 +79,14 @@ export interface CompletedMeal {
   verdict: MealVerdict
 }
 
+/** A finished day, kept so a block of them can be reported on. */
+export interface CompletedDay {
+  meals: CompletedMeal[]
+  /** The table's daily target that day. */
+  target: number
+  verdict: DayVerdict
+}
+
 export interface GameState {
   phase: Phase
   mode: Mode
@@ -84,6 +96,12 @@ export interface GameState {
   history: CompletedMeal[]
   /** Unspent calories carried forward from earlier meals in this run. */
   banked: number
+  /**
+   * Days finished in the current block. Optional on read because saves written
+   * before meal plans existed have none — and unlike the `servings` case, an
+   * empty list is genuinely the right answer for those, not a silent bug.
+   */
+  days: CompletedDay[]
 }
 
 export type Action =
@@ -99,6 +117,8 @@ export type Action =
   | { type: 'REVIEW_CART' }
   | { type: 'CHECKOUT' }
   | { type: 'NEXT_MEAL' }
+  | { type: 'FINISH_DAY' }
+  | { type: 'ABANDON_DAY' }
   | { type: 'RESTART' }
   | { type: 'HYDRATE'; state: GameState }
 
@@ -110,6 +130,7 @@ export const initialState: GameState = {
   current: null,
   history: [],
   banked: 0,
+  days: [],
 }
 
 let playerCounter = 0
@@ -413,12 +434,62 @@ export function gameReducer(state: GameState, action: Action): GameState {
       return { ...advanced, phase: phaseForMeal(meal), current: meal }
     }
 
+    case 'FINISH_DAY': {
+      if (state.history.length === 0) return state
+
+      const day: CompletedDay = {
+        meals: state.history,
+        target: dayTarget(state.players),
+        verdict: gradeDay(state.history, dayTarget(state.players)),
+      }
+      const days = [...state.days, day]
+
+      const cleared: GameState = {
+        ...state,
+        days,
+        history: [],
+        mealIndex: 0,
+        banked: 0,
+        current: null,
+      }
+
+      // A full block earns the report; otherwise straight on to the next day.
+      if (days.length >= PLAN_DAYS) return { ...cleared, phase: 'plan-report' }
+
+      const meal = startMeal(cleared, 0)
+      return { ...cleared, phase: phaseForMeal(meal), current: meal }
+    }
+
+    case 'ABANDON_DAY': {
+      // Drops the day in progress but keeps the block. Binning two finished
+      // days because you wanted to restart the third would be miserable.
+      const cleared: GameState = {
+        ...state,
+        history: [],
+        mealIndex: 0,
+        banked: 0,
+        current: null,
+      }
+      const meal = startMeal(cleared, 0)
+      return { ...cleared, phase: phaseForMeal(meal), current: meal }
+    }
+
     case 'RESTART':
       return { ...initialState, players: state.players, mode: state.mode, phase: 'budget' }
 
     default:
       return state
   }
+}
+
+/**
+ * Which day of the block is being cooked, counting from one.
+ *
+ * A finished day leads straight into the next one's shopping, so without this
+ * on screen the second and third days look exactly like the first.
+ */
+export function dayNumber(state: GameState): number {
+  return Math.min(PLAN_DAYS, state.days.length + 1)
 }
 
 /** Human-readable name for the meal in progress, for headers. */

@@ -10,6 +10,8 @@ interface Props {
   preview?: number
   /** Portions being cooked. Shown so a pooled budget never looks unspendable. */
   servings?: number
+  /** Which day of the block this is — days two and three look identical without it. */
+  day?: number
 }
 
 /**
@@ -19,7 +21,15 @@ interface Props {
  * cost of a choice is visible *before* committing it. That preview is the whole
  * mechanic — without it this is a receipt, not a game.
  */
-export function BudgetBar({ slot, spent, budget, banked = 0, preview, servings = 1 }: Props) {
+export function BudgetBar({
+  slot,
+  spent,
+  budget,
+  banked = 0,
+  preview,
+  servings = 1,
+  day,
+}: Props) {
   const remaining = budget - spent
   const projected = spent + (preview ?? 0)
   const overBy = projected - budget
@@ -34,6 +44,7 @@ export function BudgetBar({ slot, spent, budget, banked = 0, preview, servings =
     <div className={`budget-bar budget-bar-${tone}`}>
       <div className="budget-bar-top">
         <span className="eyebrow">
+          {day !== undefined && `Day ${day} · `}
           {MEAL_LABELS[slot]} budget
           {servings > 1 && <span className="budget-bar-servings"> · {servings} servings</span>}
         </span>

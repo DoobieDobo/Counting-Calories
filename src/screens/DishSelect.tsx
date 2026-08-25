@@ -7,7 +7,7 @@ import { dishesForMenu } from '../data/dishes'
 import { CATALOG } from '../data/products'
 import { cheapestBuild, priciestBuild } from '../engine/cart'
 import { pick } from '../engine/random'
-import { soleMenuFor } from '../state/gameReducer'
+import { PLAN_DAYS, dayNumber, soleMenuFor } from '../state/gameReducer'
 import { useGame } from '../state/GameContext'
 
 export function DishSelect() {
@@ -26,8 +26,9 @@ export function DishSelect() {
     <div className="screen">
       <div className="screen-head">
         <p className="eyebrow">
-          {menu?.emoji} {menu?.name} · <span className="num">{budget.toLocaleString()}</span>{' '}
-          calories to spend{servings > 1 && ` · ${servings} servings`}
+          Day {dayNumber(state)} of {PLAN_DAYS} · {menu?.emoji} {menu?.name} ·{' '}
+          <span className="num">{budget.toLocaleString()}</span> calories to spend
+          {servings > 1 && ` · ${servings} servings`}
         </p>
         <h1>What are you cooking?</h1>
         <p className="lede">

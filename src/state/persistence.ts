@@ -34,7 +34,11 @@ export function load(): GameState | null {
     const raw = localStorage.getItem(KEY)
     if (!raw) return null
     const parsed: unknown = JSON.parse(raw)
-    return isValid(parsed) ? parsed : null
+    if (!isValid(parsed)) return null
+
+    // A save from before three-day blocks has no completed days, and none is
+    // exactly right — unlike `servings`, where a default quietly restored a bug.
+    return { ...parsed, days: Array.isArray(parsed.days) ? parsed.days : [] }
   } catch {
     return null
   }
@@ -75,6 +79,24 @@ function isValid(value: unknown): value is GameState {
   for (const meal of s.history) {
     if (!meal?.dishId || !getDish(meal.dishId)) return false
     if (typeof meal.servings !== 'number' || meal.servings < 1) return false
+  }
+
+  // Completed days are absent in a save from before three-day blocks, which
+  // load() fills in. Present but malformed is a different matter: the report
+  // reads straight from them, so a half-formed day would render as one.
+  if (s.days !== undefined) {
+    if (!Array.isArray(s.days)) return false
+    for (const day of s.days) {
+      if (!day?.verdict || typeof day.target !== 'number') return false
+      if (!Array.isArray(day.meals) || day.meals.length === 0) return false
+      for (const meal of day.meals) {
+        if (typeof meal?.servings !== 'number' || meal.servings < 1) return false
+      }
+    }
+    // The report is the one screen that cannot render without them.
+    if (s.phase === 'plan-report' && s.days.length === 0) return false
+  } else if (s.phase === 'plan-report') {
+    return false
   }
 
   return true

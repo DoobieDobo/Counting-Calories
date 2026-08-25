@@ -1,7 +1,7 @@
 import { MacroBar } from '../components/MacroBar'
 import { MEAL_LABELS } from '../engine/calories'
 import { gradeDay } from '../engine/nutrition'
-import { dayTarget } from '../state/gameReducer'
+import { PLAN_DAYS, dayTarget } from '../state/gameReducer'
 import { useGame } from '../state/GameContext'
 import { clear } from '../state/persistence'
 
@@ -9,6 +9,10 @@ export function DayResult() {
   const { state, dispatch } = useGame()
   const target = dayTarget(state.players)
   const day = gradeDay(state.history, target)
+
+  // The day just played is the one after however many are already banked.
+  const dayNumber = state.days.length + 1
+  const isLastOfBlock = dayNumber >= PLAN_DAYS
 
   const priciestMeal = state.history.reduce<(typeof state.history)[number] | null>(
     (max, meal) => (!max || meal.totals.kcal > max.totals.kcal ? meal : max),
@@ -18,7 +22,9 @@ export function DayResult() {
   return (
     <div className="screen">
       <div className="screen-head">
-        <p className="eyebrow">The day</p>
+        <p className="eyebrow">
+          Day {dayNumber} of {PLAN_DAYS}
+        </p>
         <h1>
           {day.kcal.toLocaleString()} of {target.toLocaleString()} calories
         </h1>
@@ -72,9 +78,15 @@ export function DayResult() {
         </p>
       )}
 
+      <p className="lede">
+        {isLastOfBlock
+          ? `That's ${PLAN_DAYS} days. Next up is the meal plan and the shopping list behind it.`
+          : `${PLAN_DAYS - dayNumber} more ${PLAN_DAYS - dayNumber === 1 ? 'day' : 'days'} and you get a meal plan and a shopping list you can take with you.`}
+      </p>
+
       <div className="btn-row">
-        <button type="button" className="btn" onClick={() => dispatch({ type: 'RESTART' })}>
-          Play another day
+        <button type="button" className="btn" onClick={() => dispatch({ type: 'FINISH_DAY' })}>
+          {isLastOfBlock ? 'See the meal plan' : `Play day ${dayNumber + 1}`}
         </button>
         <button
           type="button"

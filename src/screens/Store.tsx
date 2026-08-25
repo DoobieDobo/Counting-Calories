@@ -9,7 +9,7 @@ import { CATALOG } from '../data/products'
 import { buildCart, cartTotals, formatQty, optionKcal } from '../engine/cart'
 import { pick } from '../engine/random'
 import { flagsFor } from '../data/dietary'
-import { pickerFor, tableConcerns, turnsSoFar } from '../state/gameReducer'
+import { dayNumber, pickerFor, tableConcerns, turnsSoFar } from '../state/gameReducer'
 import { PlayerChips } from '../components/PlayerChips'
 import { useGame } from '../state/GameContext'
 import { seatColor } from '../components/PlayerChips'
@@ -68,6 +68,7 @@ export function Store() {
         banked={state.banked}
         preview={preview}
         servings={current.servings}
+        day={dayNumber(state)}
       />
 
       <div className="store-head">
@@ -217,15 +218,23 @@ export function Store() {
  * (or one restored from an old save) was effectively a trap.
  */
 function AbandonRun() {
-  const { dispatch } = useGame()
+  const { state, dispatch } = useGame()
   const [confirming, setConfirming] = useState(false)
 
   if (confirming) {
     return (
       <span className="abandon">
-        <span className="abandon-ask">Abandon this run?</span>
-        <button type="button" className="btn btn-ghost" onClick={() => dispatch({ type: 'RESTART' })}>
-          Yes, start over
+        <span className="abandon-ask">
+          Start today over?
+          {state.days.length > 0 &&
+            ` Day${state.days.length === 1 ? '' : 's'} 1${state.days.length > 1 ? `–${state.days.length}` : ''} stay${state.days.length === 1 ? 's' : ''} banked.`}
+        </span>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => dispatch({ type: 'ABANDON_DAY' })}
+        >
+          Yes, start today over
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => setConfirming(false)}>
           Keep shopping
@@ -236,7 +245,7 @@ function AbandonRun() {
 
   return (
     <button type="button" className="btn btn-ghost abandon-trigger" onClick={() => setConfirming(true)}>
-      Start a new run
+      Start this day over
     </button>
   )
 }

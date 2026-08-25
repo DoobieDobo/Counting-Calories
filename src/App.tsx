@@ -6,6 +6,7 @@ import { DishSelect } from './screens/DishSelect'
 import { MealResult } from './screens/MealResult'
 import { MenuSelect } from './screens/MenuSelect'
 import { ModeSelect } from './screens/ModeSelect'
+import { PlanReport } from './screens/PlanReport'
 import { ProfileForm } from './screens/ProfileForm'
 import { Roster } from './screens/Roster'
 import { Store } from './screens/Store'
@@ -44,6 +45,8 @@ export function App() {
       return <MealResult />
     case 'day-result':
       return <DayResult />
+    case 'plan-report':
+      return <PlanReport />
     default:
       return <Welcome />
   }

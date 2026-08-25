@@ -162,6 +162,37 @@ describe('rejecting stale saves', () => {
     expect(loaded!.players[0]!.profile.avoid).toBeUndefined()
   })
 
+  it('still loads a run saved before three-day blocks existed', () => {
+    // Unlike `servings`, an absent `days` is honestly empty: a save from that
+    // build really had no completed days. It must read as none, not as a
+    // reason to bin the run — and never as undefined, which the day summary
+    // and the report both count.
+    const older = { ...coopRun() } as Record<string, unknown>
+    delete older.days
+    store.set(KEY, JSON.stringify(older))
+
+    const loaded = load()
+    expect(loaded).not.toBeNull()
+    expect(loaded!.days).toEqual([])
+  })
+
+  it('refuses a completed day that is missing its verdict', () => {
+    store.set(KEY, JSON.stringify(coopRun({ days: [{ meals: [] }] as never })))
+    expect(load()).toBeNull()
+  })
+
+  it('refuses a report with no days behind it', () => {
+    // The report reads straight from the block; restoring it empty would put
+    // the player on a screen with nothing to show.
+    store.set(KEY, JSON.stringify(coopRun({ phase: 'plan-report', days: [] })))
+    expect(load()).toBeNull()
+
+    const withoutDays = { ...coopRun({ phase: 'plan-report' }) } as Record<string, unknown>
+    delete withoutDays.days
+    store.set(KEY, JSON.stringify(withoutDays))
+    expect(load()).toBeNull()
+  })
+
   it('refuses malformed JSON rather than throwing', () => {
     store.set(KEY, '{not json')
     expect(load()).toBeNull()
