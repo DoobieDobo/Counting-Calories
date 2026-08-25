@@ -9,6 +9,7 @@ function line(over: Partial<CartLine> & { category: CartLine['product']['categor
     slotLabel: 'Slot',
     optionId: 'p-100g',
     use: { amount: 100, unit: 'g' },
+    servings: 1,
     kcal: 100,
     protein: 5,
     carbs: 10,

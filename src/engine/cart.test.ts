@@ -6,6 +6,7 @@ import {
   canAfford,
   cartTotals,
   cheapestBuild,
+  formatQty,
   optionKcal,
   optionNutrition,
   priciestBuild,
@@ -138,6 +139,27 @@ describe('option pricing', () => {
   it('prices a zero-basis product at zero rather than dividing by zero', () => {
     const broken: Product = { ...catalog.cheese!, basis: { amount: 0, unit: 'g' } }
     expect(optionKcal(broken, { amount: 30, unit: 'g' })).toBe(0)
+  })
+
+  it('scales the portion by the number of servings', () => {
+    const use = { amount: 200, unit: 'g' } as const
+    expect(optionKcal(catalog['sauce-pinoy']!, use, 1)).toBe(240)
+    expect(optionKcal(catalog['sauce-pinoy']!, use, 2)).toBe(480)
+    expect(optionKcal(catalog['sauce-pinoy']!, use, 4)).toBe(960)
+  })
+
+  it('scales macros with servings too, not just calories', () => {
+    const n = optionNutrition(catalog.cheese!, { amount: 50, unit: 'g' }, 3)
+    expect(n.kcal).toBe(603)
+    expect(n.protein).toBeCloseTo(37.5, 5)
+  })
+
+  it('shows the amount that actually goes in the pot', () => {
+    expect(formatQty({ amount: 180, unit: 'g' }, 1)).toBe('180 g')
+    expect(formatQty({ amount: 180, unit: 'g' }, 3)).toBe('540 g')
+    expect(formatQty({ amount: 1, unit: 'piece' }, 1)).toBe('1 piece')
+    expect(formatQty({ amount: 1, unit: 'piece' }, 2)).toBe('2 pieces')
+    expect(formatQty({ amount: 30, unit: 'ml' }, 2)).toBe('60 mL')
   })
 })
 

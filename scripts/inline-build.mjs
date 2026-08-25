@@ -5,18 +5,18 @@
  * the whole thing collapses into a single page you can open from a file, email
  * to someone, or publish anywhere that serves static HTML.
  *
- * Two output shapes, because they have different hosts:
+ * Output: `dist/standalone.html`, a complete document you can open from disk.
  *
- *   dist/standalone.html   a complete document, for opening directly
- *   dist/artifact.html     page content only, for hosts that supply their own
- *                          <!doctype>/<html>/<head>/<body> wrapper
+ * This deliberately does *not* emit a wrapper-less variant for embedding hosts.
+ * It used to, and that was a trap: Claude Artifacts silently truncates page
+ * content at roughly 36 KB total (including its own ~11 KB runtime), far below
+ * the limit its docs advertise. At ~295 KB this build gets cut mid-script, and a
+ * truncated script is a syntax error — so the symptom is a blank page with
+ * nothing in the console. The hand-written page at `docs/artifact-page.html` is
+ * what gets published there instead.
  *
- * A warning learned the hard way: some embedding hosts silently truncate page
- * content at a size far below what their docs suggest — Claude Artifacts cuts at
- * roughly 36 KB total, including its own ~11 KB runtime. A truncated inline
- * script is a syntax error, so the symptom is a blank page with nothing in the
- * console. `standalone.html` is ~294 KB and will not survive that. Always check
- * the *published* byte count against the source, not just that the file wrote.
+ * The lesson generalises: check the *published* byte count against the source.
+ * Rendering the file locally proves nothing about what the host kept.
  *
  * Run via `npm run build:standalone`.
  */
@@ -62,16 +62,5 @@ const inlined = html
 
 writeFileSync(join(DIST, 'standalone.html'), inlined)
 
-// The artifact variant drops the document wrapper, keeping only what goes
-// inside <body> plus the <title> and <style> the host hoists into its head.
-const title = /<title>(.*?)<\/title>/.exec(html)?.[1] ?? 'Counting Calories'
-const body = /<body>([\s\S]*?)<\/body>/.exec(inlined)?.[1] ?? ''
-
-writeFileSync(
-  join(DIST, 'artifact.html'),
-  `<title>${title}</title>\n<style>\n${css}\n</style>\n${body.trim()}\n`,
-)
-
 const kb = (s) => `${Math.round(s.length / 1024)} KB`
-console.log(`dist/standalone.html  ${kb(inlined)}  (complete document)`)
-console.log(`dist/artifact.html    ${kb(css) } CSS + ${kb(safeJs)} JS  (page content only)`)
+console.log(`dist/standalone.html  ${kb(inlined)}  (${kb(css)} CSS + ${kb(safeJs)} JS, inlined)`)

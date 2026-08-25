@@ -20,18 +20,20 @@ export function DishSelect() {
   const hasMenuChoice = soleMenuFor(state.current.slot) === null
   const dishes = dishesForMenu(state.current.menuId)
   const budget = state.current.budget
+  const servings = state.current.servings
 
   return (
     <div className="screen">
       <div className="screen-head">
         <p className="eyebrow">
           {menu?.emoji} {menu?.name} · <span className="num">{budget.toLocaleString()}</span>{' '}
-          calories to spend
+          calories to spend{servings > 1 && ` · ${servings} servings`}
         </p>
         <h1>What are you cooking?</h1>
         <p className="lede">
           The range under each dish is what it costs built as cheaply as possible, up to built
           without restraint. Most of that difference is choices you're about to make.
+          {servings > 1 && ` Priced for ${servings} servings, since you're all eating.`}
         </p>
       </div>
 
@@ -51,8 +53,8 @@ export function DishSelect() {
       ) : (
         <div className="dish-grid">
           {dishes.map((dish) => {
-            const low = cheapestBuild(dish, CATALOG)
-            const high = priciestBuild(dish, CATALOG)
+            const low = cheapestBuild(dish, CATALOG, servings)
+            const high = priciestBuild(dish, CATALOG, servings)
             const affordable = low <= budget
             return (
               <button

@@ -37,7 +37,12 @@ export function Store() {
 
   // The running total excludes the slot being decided, so re-choosing an
   // ingredient you already picked doesn't double-count it on the bar.
-  const committed = buildCart(dish, { ...current.choices, [slot.id]: null }, CATALOG)
+  const committed = buildCart(
+    dish,
+    { ...current.choices, [slot.id]: null },
+    CATALOG,
+    current.servings,
+  )
   const spent = cartTotals(committed).kcal
   const chosen = current.choices[slot.id]
 
@@ -59,11 +64,13 @@ export function Store() {
         budget={current.budget}
         banked={state.banked}
         preview={preview}
+        servings={current.servings}
       />
 
       <div className="store-head">
         <p className="eyebrow">
           {dish.emoji} {dish.name}
+          {current.servings > 1 && ` · cooking for ${current.servings}`}
         </p>
         <h1>{slot.prompt}</h1>
         {!slot.optional && (
@@ -98,8 +105,8 @@ export function Store() {
             const product = CATALOG[option.productId]!
             return {
               id: option.id,
-              label: `${product.name} · ${optionKcal(product, option.use)} cal`,
-              sublabel: `${product.pack} — uses ${formatQty(option.use)}`,
+              label: `${product.name} · ${optionKcal(product, option.use, current.servings)} cal`,
+              sublabel: `${product.pack} — uses ${formatQty(option.use, current.servings)}`,
             }
           })}
           players={state.players}
@@ -122,6 +129,7 @@ export function Store() {
                 selected={chosen === option.id}
                 spent={spent}
                 budget={current.budget}
+                servings={current.servings}
                 onSelect={() => choose(option.id)}
                 onPreview={setPreview}
               />

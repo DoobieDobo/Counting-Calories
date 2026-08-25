@@ -1,0 +1,285 @@
+<title>Counting Calories</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fdf8f0;
+    --surface: #fff;
+    --border: #e4d9c8;
+    --rule: #cfc0a9;
+    --text: #241d14;
+    --muted: #6d6153;
+    --faint: #948877;
+    --accent: #1f7a4d;
+    --hot: #b8362f;
+
+    --bg: light-dark(#fdf8f0, #16130f);
+    --surface: light-dark(#fff, #211d18);
+    --border: light-dark(#e4d9c8, #362f26);
+    --rule: light-dark(#cfc0a9, #4b4133);
+    --text: light-dark(#241d14, #f2ebe0);
+    --muted: light-dark(#6d6153, #b0a493);
+    --faint: light-dark(#948877, #83786a);
+    --accent: light-dark(#1f7a4d, #4bbd84);
+    --hot: light-dark(#b8362f, #ef7a72);
+
+    --sans: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont,
+      "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 40px 20px 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .mark { font-size: 3rem; line-height: 1; }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(1.8rem, 6vw, 2.5rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  p { margin: 0; }
+  .lede { color: var(--muted); }
+
+  /* The receipt is the whole pitch: one slot, five prices. */
+  .receipt {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    box-shadow: 0 1px 2px light-dark(rgb(36 29 20/6%), rgb(0 0 0/30%)),
+      0 4px 14px light-dark(rgb(36 29 20/6%), rgb(0 0 0/25%));
+  }
+
+  .receipt-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding-bottom: 10px;
+    margin-bottom: 6px;
+    border-bottom: 1.5px dashed var(--rule);
+  }
+
+  .row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 7px 0;
+  }
+
+  .row + .row { border-top: 1px dashed var(--border); }
+
+  .row-name { flex: 1; min-width: 0; }
+
+  .row-price {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 1.05rem;
+    white-space: nowrap;
+  }
+
+  .dear .row-price { color: var(--hot); }
+  .cheap .row-price { color: var(--accent); }
+
+  .receipt-foot {
+    margin-top: 10px;
+    padding-top: 11px;
+    border-top: 1.5px dashed var(--rule);
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  ol.routes {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    counter-reset: r;
+  }
+
+  ol.routes li {
+    counter-increment: r;
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 13px;
+    align-items: start;
+  }
+
+  ol.routes li::before {
+    content: counter(r);
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--accent);
+    background: light-dark(#e4f2ea, #1a3128);
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    margin-top: 1px;
+  }
+
+  .route-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .route-body strong { font-weight: 650; }
+  .route-body span { color: var(--muted); font-size: 0.93rem; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 2px 6px;
+    overflow-wrap: anywhere;
+  }
+
+  .note {
+    border-left: 3px solid var(--rule);
+    padding-left: 14px;
+    color: var(--muted);
+    font-size: 0.93rem;
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 18px;
+    color: var(--faint);
+    font-size: 0.85rem;
+  }
+</style>
+
+<div class="wrap">
+  <div class="mark">🛒</div>
+
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <h2>Counting Calories</h2>
+    <h1>The prices are in calories.</h1>
+    <p class="lede">
+      Pick a dish, then shop for it one ingredient at a time. Every choice comes off a
+      budget worked out from your own height, weight and activity level — and the
+      checkout says no if you can't afford it.
+    </p>
+  </div>
+
+  <div class="receipt">
+    <div class="receipt-head">
+      <strong>Spaghetti sauce</strong>
+      <span style="color:var(--faint);font-size:0.85rem">one serving</span>
+    </div>
+    <div class="row dear">
+      <span class="row-name">Pinoy-style sweet spaghetti sauce</span>
+      <span class="row-price">216</span>
+    </div>
+    <div class="row">
+      <span class="row-name">American-style meat sauce</span>
+      <span class="row-price">171</span>
+    </div>
+    <div class="row">
+      <span class="row-name">Italian-style marinara</span>
+      <span class="row-price">117</span>
+    </div>
+    <div class="row">
+      <span class="row-name">Canned crushed tomatoes</span>
+      <span class="row-price">58</span>
+    </div>
+    <div class="row cheap">
+      <span class="row-name">Fresh tomatoes, chopped</span>
+      <span class="row-price">36</span>
+    </div>
+    <p class="receipt-foot">
+      Same dish, same slot, a six-fold difference. Thirty-nine dishes across five
+      menus — Filipino, American, Arabic, Chinese, and a breakfast menu of silogs and
+      diner plates — each with a shelf like this behind every ingredient.
+    </p>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <h2>Playing it</h2>
+    <p class="lede">
+      The game is a 300 KB app and this page can only hold about 36 KB, so it lives
+      elsewhere. Three ways in:
+    </p>
+
+    <ol class="routes">
+      <li>
+        <div class="route-body">
+          <strong>Open the file Claude sent you</strong>
+          <span>
+            The entire game in one HTML file. Save it, tap it in Downloads, open it
+            with Chrome. Runs offline and remembers where you got to.
+          </span>
+        </div>
+      </li>
+      <li>
+        <div class="route-body">
+          <strong>Run it from the repo</strong>
+          <span>
+            <code>npm install</code> then <code>npm run dev</code> in
+            <code>DoobieDobo/Counting-Calories</code>.
+          </span>
+        </div>
+      </li>
+      <li>
+        <div class="route-body">
+          <strong>Host it on GitHub Pages</strong>
+          <span>
+            A permanent URL that rebuilds on every push. The workflow is already in
+            the repo — it needs the repository set to public and Pages switched on.
+          </span>
+        </div>
+      </li>
+    </ol>
+  </div>
+
+  <p class="note">
+    Co-op works too: two to four people on one screen, budgets pooled into a single
+    pot, and the person who commits each ingredient rotates — so every choice has to
+    be argued for out loud. Every dish is cooked one serving per player, so the food
+    on the table scales with the budget behind it.
+  </p>
+
+  <footer>
+    A game, not medical advice. Calorie figures come from standard composition tables
+    and the budget from the Mifflin-St Jeor equation — built to make the cost of food
+    choices felt, not to manage a health condition.
+  </footer>
+</div>

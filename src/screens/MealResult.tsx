@@ -11,7 +11,8 @@ export function MealResult() {
 
   const { verdict } = meal
   const isLastMeal = state.mealIndex >= RUN_MEALS.length - 1
-  const share = state.players.length > 1 ? Math.round(meal.totals.kcal / state.players.length) : null
+  // One portion each, so a player's share is the meal divided by the table.
+  const share = meal.servings > 1 ? Math.round(meal.totals.kcal / meal.servings) : null
 
   return (
     <div className="screen">
@@ -69,7 +70,7 @@ export function MealResult() {
 
       {share !== null && (
         <div className="card split-card">
-          <h3>Split across the table</h3>
+          <h3>A portion each</h3>
           <ul className="split-list">
             {state.players.map((player, i) => (
               <li key={player.id} style={{ '--seat': seatColor(i) } as React.CSSProperties}>
@@ -80,7 +81,9 @@ export function MealResult() {
             ))}
           </ul>
           <p className="lede">
-            One pot, one meal, split evenly. Whether that's fair is between you.
+            You cooked {meal.servings} servings for{' '}
+            <strong className="num">{meal.totals.kcal.toLocaleString()}</strong> calories, so
+            that's what each of you is actually eating.
           </p>
         </div>
       )}

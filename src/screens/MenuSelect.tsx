@@ -14,7 +14,7 @@ export function MenuSelect() {
   const [voting, setVoting] = useState(false)
   if (!state.current) return null
 
-  const { slot, budget } = state.current
+  const { slot, budget, servings } = state.current
   const available = MENUS_BY_MEAL[slot].map((id) => getMenu(id)).filter((m) => m !== undefined)
 
   function choose(menuId: MenuId) {
@@ -26,7 +26,7 @@ export function MenuSelect() {
       <div className="screen-head">
         <p className="eyebrow">
           {MEAL_LABELS[slot]} · <span className="num">{budget.toLocaleString()}</span> calories to
-          spend
+          spend{servings > 1 && ` · ${servings} servings`}
         </p>
         <h1>{state.mode === 'coop' ? 'Pick a menu together' : 'Pick a menu'}</h1>
         {state.banked > 0 && (

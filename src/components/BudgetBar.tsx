@@ -8,6 +8,8 @@ interface Props {
   banked?: number
   /** Cost of the option currently under the cursor, previewed on the bar. */
   preview?: number
+  /** Portions being cooked. Shown so a pooled budget never looks unspendable. */
+  servings?: number
 }
 
 /**
@@ -17,7 +19,7 @@ interface Props {
  * cost of a choice is visible *before* committing it. That preview is the whole
  * mechanic — without it this is a receipt, not a game.
  */
-export function BudgetBar({ slot, spent, budget, banked = 0, preview }: Props) {
+export function BudgetBar({ slot, spent, budget, banked = 0, preview, servings = 1 }: Props) {
   const remaining = budget - spent
   const projected = spent + (preview ?? 0)
   const overBy = projected - budget
@@ -31,7 +33,10 @@ export function BudgetBar({ slot, spent, budget, banked = 0, preview }: Props) {
   return (
     <div className={`budget-bar budget-bar-${tone}`}>
       <div className="budget-bar-top">
-        <span className="eyebrow">{MEAL_LABELS[slot]} budget</span>
+        <span className="eyebrow">
+          {MEAL_LABELS[slot]} budget
+          {servings > 1 && <span className="budget-bar-servings"> · {servings} servings</span>}
+        </span>
         <span className="budget-bar-figure">
           <strong className="num">{spent.toLocaleString()}</strong>
           <span className="budget-bar-sep">/</span>

@@ -11,7 +11,9 @@ export interface CartLine {
   slotLabel: string
   optionId: string
   product: Product
+  /** Per-serving amount, as authored. Multiply by `servings` for the real total. */
   use: Qty
+  servings: number
   note?: string
   kcal: number
   protein: number
@@ -38,23 +40,28 @@ export type Choices = Record<string, string | null>
 /**
  * Fraction of a product's basis amount that a slot option uses.
  *
+ * Recipes are authored for one serving, so `servings` scales them for the whole
+ * table. This has to move in lockstep with the budget: co-op pools every
+ * player's calories into one pot, and cooking a single portion out of a pot that
+ * size would make every meal come in absurdly under budget.
+ *
  * Units are expected to match — the data-integrity test enforces that — but a
  * mismatch falls back to a straight ratio rather than throwing, so one bad data
  * entry can't take the whole store down mid-game.
  */
-export function portionRatio(product: Product, use: Qty): number {
+export function portionRatio(product: Product, use: Qty, servings = 1): number {
   if (product.basis.amount <= 0) return 0
-  return use.amount / product.basis.amount
+  return (use.amount * servings) / product.basis.amount
 }
 
-/** What this shelf option costs the player, in calories, for this dish. */
-export function optionKcal(product: Product, use: Qty): number {
-  return Math.round(product.kcal * portionRatio(product, use))
+/** What this shelf option costs the table, in calories, for this dish. */
+export function optionKcal(product: Product, use: Qty, servings = 1): number {
+  return Math.round(product.kcal * portionRatio(product, use, servings))
 }
 
 /** Full nutrition for one shelf option at the amount the dish uses. */
-export function optionNutrition(product: Product, use: Qty): CartTotals {
-  const r = portionRatio(product, use)
+export function optionNutrition(product: Product, use: Qty, servings = 1): CartTotals {
+  const r = portionRatio(product, use, servings)
   return {
     kcal: Math.round(product.kcal * r),
     protein: round1(product.protein * r),
@@ -76,6 +83,7 @@ export function buildCart(
   dish: Dish,
   choices: Choices,
   catalog: Record<string, Product>,
+  servings = 1,
 ): CartLine[] {
   const lines: CartLine[] = []
 
@@ -87,13 +95,14 @@ export function buildCart(
     const product = option ? catalog[option.productId] : undefined
     if (!option || !product) continue
 
-    const n = optionNutrition(product, option.use)
+    const n = optionNutrition(product, option.use, servings)
     lines.push({
       slotId: slot.id,
       slotLabel: slot.label,
       optionId: option.id,
       product,
       use: option.use,
+      servings,
       ...(option.note === undefined ? {} : { note: option.note }),
       ...n,
     })
@@ -140,10 +149,14 @@ export function describeOption(product: Product, option: SlotOption): string {
   return option.note ? `${product.name} (${option.note})` : product.name
 }
 
-/** How the portion reads on a product card: "180 g", "2 pieces", "30 mL". */
-export function formatQty(use: Qty): string {
-  if (use.unit === 'piece') return use.amount === 1 ? '1 piece' : `${use.amount} pieces`
-  return `${use.amount} ${use.unit === 'ml' ? 'mL' : 'g'}`
+/**
+ * How the portion reads on a product card: "180 g", "2 pieces", "30 mL".
+ * Scaled to the whole table, so what's shown is what actually goes in the pot.
+ */
+export function formatQty(use: Qty, servings = 1): string {
+  const amount = round1(use.amount * servings)
+  if (use.unit === 'piece') return amount === 1 ? '1 piece' : `${amount} pieces`
+  return `${amount} ${use.unit === 'ml' ? 'mL' : 'g'}`
 }
 
 /**
@@ -157,6 +170,7 @@ export function bestSwap(
   dish: Dish,
   choices: Choices,
   catalog: Record<string, Product>,
+  servings = 1,
 ): SwapHint | null {
   let best: SwapHint | null = null
 
@@ -168,14 +182,14 @@ export function bestSwap(
     const chosenProduct = chosenOption ? catalog[chosenOption.productId] : undefined
     if (!chosenOption || !chosenProduct) continue
 
-    const chosenKcal = optionKcal(chosenProduct, chosenOption.use)
+    const chosenKcal = optionKcal(chosenProduct, chosenOption.use, servings)
 
     for (const option of slot.options) {
       if (option.id === chosenId) continue
       const product = catalog[option.productId]
       if (!product) continue
 
-      const saving = chosenKcal - optionKcal(product, option.use)
+      const saving = chosenKcal - optionKcal(product, option.use, servings)
       if (saving > 0 && (!best || saving > best.saving)) {
         best = {
           slotId: slot.id,
@@ -193,13 +207,17 @@ export function bestSwap(
 }
 
 /** Cheapest possible full build of a dish — used to prove every dish is playable. */
-export function cheapestBuild(dish: Dish, catalog: Record<string, Product>): number {
+export function cheapestBuild(
+  dish: Dish,
+  catalog: Record<string, Product>,
+  servings = 1,
+): number {
   return dish.slots.reduce((sum, slot) => {
     if (slot.optional) return sum // an optional slot's floor is zero: skip it
     const costs = slot.options
       .map((o) => {
         const product = catalog[o.productId]
-        return product ? optionKcal(product, o.use) : Infinity
+        return product ? optionKcal(product, o.use, servings) : Infinity
       })
       .filter((c) => Number.isFinite(c))
     return costs.length === 0 ? sum : sum + Math.min(...costs)
@@ -207,12 +225,16 @@ export function cheapestBuild(dish: Dish, catalog: Record<string, Product>): num
 }
 
 /** Priciest full build — the "everything, and make it fried" ceiling. */
-export function priciestBuild(dish: Dish, catalog: Record<string, Product>): number {
+export function priciestBuild(
+  dish: Dish,
+  catalog: Record<string, Product>,
+  servings = 1,
+): number {
   return dish.slots.reduce((sum, slot) => {
     const costs = slot.options
       .map((o) => {
         const product = catalog[o.productId]
-        return product ? optionKcal(product, o.use) : 0
+        return product ? optionKcal(product, o.use, servings) : 0
       })
       .filter((c) => Number.isFinite(c))
     return costs.length === 0 ? sum : sum + Math.max(...costs)

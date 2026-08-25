@@ -10,6 +10,8 @@ interface Props {
   /** Calories already committed, so the card can flag an unaffordable pick. */
   spent: number
   budget: number
+  /** Portions being cooked — one per player. Scales the amount and the price. */
+  servings: number
   onSelect: () => void
   onPreview: (kcal: number | undefined) => void
 }
@@ -27,10 +29,11 @@ export function ProductCard({
   selected,
   spent,
   budget,
+  servings,
   onSelect,
   onPreview,
 }: Props) {
-  const nutrition = optionNutrition(product, option.use)
+  const nutrition = optionNutrition(product, option.use, servings)
   const unaffordable = spent + nutrition.kcal > budget
 
   return (
@@ -53,7 +56,13 @@ export function ProductCard({
         <span className="product-pack">{product.pack}</span>
 
         <span className="product-use">
-          Uses {formatQty(option.use)}
+          Uses {formatQty(option.use, servings)}
+          {servings > 1 && (
+            <span className="product-scale">
+              {' '}
+              ({formatQty(option.use)} × {servings})
+            </span>
+          )}
           {option.note && <span className="product-note"> · {option.note}</span>}
         </span>
 

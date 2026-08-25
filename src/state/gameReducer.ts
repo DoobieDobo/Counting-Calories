@@ -54,6 +54,12 @@ export interface CurrentMeal {
   choices: Choices
   /** Calories available for this meal: the players' share plus anything banked. */
   budget: number
+  /**
+   * How many portions are being cooked — one per player. Recipes are authored
+   * for a single serving, so this has to scale with the pooled budget or a
+   * co-op meal is priced for one person out of a pot meant for the whole table.
+   */
+  servings: number
 }
 
 export interface CompletedMeal {
@@ -64,6 +70,7 @@ export interface CompletedMeal {
   choices: Choices
   totals: CartTotals
   budget: number
+  servings: number
   verdict: MealVerdict
 }
 
@@ -148,6 +155,7 @@ function startMeal(state: GameState, mealIndex: number): CurrentMeal {
     slotIndex: 0,
     choices: {},
     budget: mealPot(state.players, slot, state.banked),
+    servings: Math.max(1, state.players.length),
   }
 }
 
@@ -258,7 +266,7 @@ export function gameReducer(state: GameState, action: Action): GameState {
       const dish = getDish(state.current.dishId)
       if (!dish) return state
 
-      const lines = buildCart(dish, state.current.choices, CATALOG)
+      const lines = buildCart(dish, state.current.choices, CATALOG, state.current.servings)
       const totals = cartTotals(lines)
       // The cart screen gates this, but the reducer refuses too — an over-budget
       // checkout must never be reachable by any route.
@@ -272,6 +280,7 @@ export function gameReducer(state: GameState, action: Action): GameState {
         choices: state.current.choices,
         totals,
         budget: state.current.budget,
+        servings: state.current.servings,
         verdict: gradeMeal(lines, totals, state.current.budget),
       }
 

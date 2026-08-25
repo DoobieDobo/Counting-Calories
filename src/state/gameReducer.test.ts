@@ -248,6 +248,72 @@ describe('checkout', () => {
   })
 })
 
+describe('co-op servings', () => {
+  it('cooks one portion per player', () => {
+    expect(soloStart().current!.servings).toBe(1)
+    expect(coopStart().current!.servings).toBe(2)
+  })
+
+  /**
+   * The bug this guards: co-op pooled every player's calories into one pot but
+   * still cooked a single portion, so a two-player meal had double the budget
+   * and the same amount of food. Every result came in absurdly under budget and
+   * the grading blamed the players for it.
+   *
+   * The invariant is that food and budget scale together — two identical
+   * players making identical choices should land at the same proportion of
+   * their budget as one player alone.
+   */
+  it('keeps the same budget usage as solo when the table doubles', () => {
+    const twin = profile()
+
+    let solo = run([
+      { type: 'SET_MODE', mode: 'solo' },
+      { type: 'ADD_PLAYER', profile: twin },
+      { type: 'START_RUN' },
+      { type: 'CHOOSE_DISH', dishId: 'tapsilog' },
+    ])
+    solo = shopCheaply(solo)
+    solo = gameReducer(solo, { type: 'CHECKOUT' })
+
+    let duo = run([
+      { type: 'SET_MODE', mode: 'coop' },
+      { type: 'ADD_PLAYER', profile: twin },
+      { type: 'ADD_PLAYER', profile: twin },
+      { type: 'START_RUN' },
+      { type: 'CHOOSE_DISH', dishId: 'tapsilog' },
+    ])
+    duo = shopCheaply(duo)
+    duo = gameReducer(duo, { type: 'CHECKOUT' })
+
+    const soloMeal = solo.history[0]!
+    const duoMeal = duo.history[0]!
+
+    // Two identical players: double the budget, and now double the food.
+    // Each line is rounded to a whole calorie, so doubling the portion and
+    // doubling the rounded total can differ by a calorie per line — the point
+    // is that they track, not that they match to the unit.
+    expect(duoMeal.budget).toBe(soloMeal.budget * 2)
+    expect(duoMeal.totals.kcal).toBeGreaterThan(soloMeal.totals.kcal * 2 - 10)
+    expect(duoMeal.totals.kcal).toBeLessThan(soloMeal.totals.kcal * 2 + 10)
+
+    // Which means the same share of the budget spent, and the same grade.
+    expect(duoMeal.verdict.usage).toBeCloseTo(soloMeal.verdict.usage, 2)
+    expect(duoMeal.verdict.grade).toBe(soloMeal.verdict.grade)
+
+    // And the failure this replaces: before scaling, a two-player meal spent
+    // half the share a solo one did.
+    expect(duoMeal.verdict.usage).toBeGreaterThan(soloMeal.verdict.usage * 0.9)
+  })
+
+  it('records servings on the finished meal so the split is real', () => {
+    let duo = gameReducer(coopStart(), { type: 'CHOOSE_DISH', dishId: 'tapsilog' })
+    duo = shopCheaply(duo)
+    duo = gameReducer(duo, { type: 'CHECKOUT' })
+    expect(duo.history[0]!.servings).toBe(2)
+  })
+})
+
 describe('co-op picker', () => {
   it('rotates the picker with each ingredient', () => {
     let state = gameReducer(coopStart(), { type: 'CHOOSE_DISH', dishId: 'champorado' })

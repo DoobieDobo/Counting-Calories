@@ -17,8 +17,10 @@ export function Roster() {
         <p className="eyebrow">Co-op</p>
         <h1>The table</h1>
         <p className="lede">
-          Everyone's daily target goes into one pot. You'll pick the menu together and take turns
-          committing each ingredient — so the whole cart gets talked about, not just decided.
+          Everyone's daily target goes into one pot, and every dish is cooked one serving per
+          player — so the food scales with the budget. You'll pick the menu together and take
+          turns committing each ingredient, so the whole cart gets talked about rather than
+          just decided.
         </p>
       </div>
 

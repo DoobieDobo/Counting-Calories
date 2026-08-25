@@ -35,7 +35,8 @@ export function BudgetReveal() {
         )}
         {isCoop && (
           <p className="lede">
-            {state.players.length} players, pooled. You spend it as one cart.
+            {state.players.length} players, pooled. You spend it as one cart, cooking{' '}
+            {state.players.length} servings of every dish — a portion each.
           </p>
         )}
       </div>

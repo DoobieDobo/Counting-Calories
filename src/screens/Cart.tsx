@@ -25,11 +25,11 @@ export function Cart() {
   const dish = current?.dishId ? getDish(current.dishId) : undefined
   if (!current || !dish) return null
 
-  const lines = buildCart(dish, current.choices, CATALOG)
+  const lines = buildCart(dish, current.choices, CATALOG, current.servings)
   const totals = cartTotals(lines)
   const affordable = canAfford(totals.kcal, current.budget)
   const over = totals.kcal - current.budget
-  const swap = affordable ? null : bestSwap(dish, current.choices, CATALOG)
+  const swap = affordable ? null : bestSwap(dish, current.choices, CATALOG, current.servings)
 
   const skipped = dish.slots.filter((s) => current.choices[s.id] === null)
   const skippedRequired = skipped.filter((s) => !s.optional)
@@ -47,6 +47,12 @@ export function Cart() {
         <h1>
           {dish.emoji} {dish.name}
         </h1>
+        {current.servings > 1 && (
+          <p className="lede">
+            Cooking <strong>{current.servings} servings</strong> — everything below is the
+            amount for the whole table.
+          </p>
+        )}
       </div>
 
       <div className="receipt card">
@@ -69,7 +75,7 @@ export function Cart() {
                 <span className="receipt-body">
                   <span className="receipt-name">{line.product.name}</span>
                   <span className="receipt-meta">
-                    {line.slotLabel} · {formatQty(line.use)}
+                    {line.slotLabel} · {formatQty(line.use, line.servings)}
                     {line.note && ` · ${line.note}`}
                   </span>
                 </span>
