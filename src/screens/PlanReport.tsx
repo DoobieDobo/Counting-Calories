@@ -4,9 +4,15 @@ import { CATALOG } from '../data/products'
 import { buildCart } from '../engine/cart'
 import { MEAL_LABELS } from '../engine/calories'
 import { macroSplit, produceLines } from '../engine/nutrition'
-import { formatAmount, shoppingByAisle, shoppingTotal } from '../engine/shopping'
+import { formatAmount, formatShare, shoppingByAisle, shoppingTotal } from '../engine/shopping'
 import { suggestPlan } from '../engine/suggest'
-import { PLAN_DAYS, RUN_MEALS, dayTarget, tableConcerns } from '../state/gameReducer'
+import {
+  PLAN_DAYS,
+  RUN_MEALS,
+  dayTarget,
+  portionWeights,
+  tableConcerns,
+} from '../state/gameReducer'
 import type { CompletedDay } from '../state/gameReducer'
 import { useGame } from '../state/GameContext'
 import { clear } from '../state/persistence'
@@ -21,7 +27,9 @@ export function PlanReport() {
   const days = state.days
   if (days.length === 0) return null
 
-  const aisles = shoppingByAisle(days)
+  // A solo shopper has nothing to divide, so they keep the plain list.
+  const split = state.players.length > 1
+  const aisles = shoppingByAisle(days, split ? portionWeights(state.players) : [])
   const listTotal = shoppingTotal(days)
   const concerns = tableConcerns(state.players)
   const plan = suggestPlan(days, state.players, concerns)
@@ -122,31 +130,97 @@ export function PlanReport() {
         <p className="lede">
           Everything those meals needed, added up and sorted by aisle. Quantities are already
           scaled to {servings} {servings === 1 ? 'serving' : 'servings'} a meal.
+          {split && (
+            <>
+              {' '}
+              Buy the <strong>Total</strong> column — that's one shop for everyone. The columns
+              before it are each person's share of it, in proportion to their own target, for when
+              it comes time to put food on plates.
+            </>
+          )}
         </p>
 
-        {aisles.map((aisle) => (
-          <div key={aisle.category} className="aisle">
-            <h3>
-              {aisle.label}
-              <span className="num aisle-kcal">{aisle.kcal.toLocaleString()} cal</span>
-            </h3>
-            <ul className="aisle-list">
-              {aisle.lines.map((line) => (
-                <li key={`${line.product.id}-${line.unit}`}>
-                  <span className="aisle-emoji" aria-hidden="true">
-                    {line.product.emoji}
-                  </span>
-                  <span className="aisle-body">
-                    <span className="aisle-name">{line.product.name}</span>
-                    <span className="aisle-for">for {line.usedIn.join(', ')}</span>
-                  </span>
-                  <strong className="num aisle-amount">{formatAmount(line)}</strong>
-                  <span className="num aisle-line-kcal">{line.kcal.toLocaleString()}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        {aisles.map((aisle) =>
+          split ? (
+            <div key={aisle.category} className="aisle">
+              <h3>
+                {aisle.label}
+                <span className="num aisle-kcal">{aisle.kcal.toLocaleString()} cal</span>
+              </h3>
+              <div className="aisle-table-wrap">
+                <table className="aisle-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Item</th>
+                      {state.players.map((p) => (
+                        <th key={p.id} scope="col" className="aisle-share-head">
+                          {p.profile.name}
+                        </th>
+                      ))}
+                      <th scope="col" className="aisle-total-head">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {aisle.lines.map((line) => (
+                      <tr key={`${line.product.id}-${line.unit}`}>
+                        <th scope="row">
+                          {/*
+                            The flex layout lives on an inner span: a table cell
+                            that is itself a flex container stops honouring the
+                            fixed column width and collapses the name.
+                          */}
+                          <span className="aisle-item">
+                            <span className="aisle-emoji" aria-hidden="true">
+                              {line.product.emoji}
+                            </span>
+                            <span className="aisle-body">
+                              <span className="aisle-name">{line.product.name}</span>
+                              <span className="aisle-for">
+                                for {line.usedIn.join(', ')} · {line.kcal.toLocaleString()} cal
+                              </span>
+                            </span>
+                          </span>
+                        </th>
+                        {line.perPlayer.map((share, i) => (
+                          <td key={state.players[i]?.id ?? i} className="num aisle-share">
+                            {formatShare(share)}
+                          </td>
+                        ))}
+                        <td className="num aisle-total">
+                          <strong>{formatAmount(line)}</strong>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div key={aisle.category} className="aisle">
+              <h3>
+                {aisle.label}
+                <span className="num aisle-kcal">{aisle.kcal.toLocaleString()} cal</span>
+              </h3>
+              <ul className="aisle-list">
+                {aisle.lines.map((line) => (
+                  <li key={`${line.product.id}-${line.unit}`}>
+                    <span className="aisle-emoji" aria-hidden="true">
+                      {line.product.emoji}
+                    </span>
+                    <span className="aisle-body">
+                      <span className="aisle-name">{line.product.name}</span>
+                      <span className="aisle-for">for {line.usedIn.join(', ')}</span>
+                    </span>
+                    <strong className="num aisle-amount">{formatAmount(line)}</strong>
+                    <span className="num aisle-line-kcal">{line.kcal.toLocaleString()}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ),
+        )}
 
         <p className="lede">
           <strong className="num">{listTotal.toLocaleString()}</strong> calories on the list —

@@ -11,6 +11,7 @@ import { CATALOG } from '../data/products'
 import { getDish } from '../data/dishes'
 import type { Category, Product, Unit } from '../data/types'
 import { buildCart } from './cart'
+import { splitAmount } from './split'
 import type { CompletedDay } from '../state/gameReducer'
 
 export interface ShoppingLine {
@@ -21,6 +22,14 @@ export interface ShoppingLine {
   kcal: number
   /** Which dishes needed it, so a line explains itself. */
   usedIn: string[]
+  /**
+   * How much of `amount` belongs to each player, in roster order, apportioned
+   * by their own calorie targets — the same split the game uses when it dishes
+   * a cooked meal onto plates. Sums back to `amount` exactly.
+   *
+   * Empty when no weights were given, which is every solo run.
+   */
+  perPlayer: number[]
 }
 
 export interface Aisle {
@@ -56,7 +65,10 @@ function key(productId: string, unit: Unit): string {
   return `${productId}::${unit}`
 }
 
-export function shoppingList(days: readonly CompletedDay[]): ShoppingLine[] {
+export function shoppingList(
+  days: readonly CompletedDay[],
+  weights: readonly number[] = [],
+): ShoppingLine[] {
   const merged = new Map<string, ShoppingLine>()
 
   for (const day of days) {
@@ -82,18 +94,30 @@ export function shoppingList(days: readonly CompletedDay[]): ShoppingLine[] {
             unit: line.use.unit,
             kcal: line.kcal,
             usedIn: [meal.dishName],
+            perPlayer: [],
           })
         }
       }
     }
   }
 
-  return [...merged.values()]
+  // Split once at the end rather than per meal: apportioning each meal
+  // separately and adding up would round in every one of them, and the columns
+  // would drift away from the total they sit beside.
+  const lines = [...merged.values()]
+  if (weights.length > 0) {
+    for (const line of lines) line.perPlayer = splitAmount(line.amount, weights)
+  }
+
+  return lines
 }
 
 /** The list grouped into aisles, priciest first within each, empties dropped. */
-export function shoppingByAisle(days: readonly CompletedDay[]): Aisle[] {
-  const lines = shoppingList(days)
+export function shoppingByAisle(
+  days: readonly CompletedDay[],
+  weights: readonly number[] = [],
+): Aisle[] {
+  const lines = shoppingList(days, weights)
 
   return AISLES.map(({ category, label }) => {
     const inAisle = lines
@@ -112,6 +136,20 @@ export function shoppingByAisle(days: readonly CompletedDay[]): Aisle[] {
 export function formatAmount(line: ShoppingLine): string {
   if (line.unit === 'piece') return line.amount === 1 ? '1 piece' : `${line.amount} pieces`
   return `${line.amount} ${line.unit === 'ml' ? 'mL' : 'g'}`
+}
+
+/**
+ * One player's share, for a column narrow enough to sit beside five others.
+ *
+ * Bare number: the total at the end of the same row carries the unit, and
+ * repeating it in every cell turns a table into a wall. Fractions of a piece
+ * stay, because half a tortilla is a real thing to put on a plate.
+ *
+ * A share can round to nothing when a very small amount meets a big table. A
+ * dash says that better than a zero, which reads like an error.
+ */
+export function formatShare(amount: number): string {
+  return amount === 0 ? '—' : String(amount)
 }
 
 /** Total calories on the list — should reconcile with what the days cooked. */

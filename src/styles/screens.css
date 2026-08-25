@@ -960,6 +960,100 @@
   white-space: nowrap;
 }
 
+/* The same list, split into a column per player, for a table shopping once. */
+
+.aisle-table-wrap {
+  overflow-x: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.aisle-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+  /*
+   * Each aisle is its own table, so without a fixed layout every one of them
+   * sizes its columns to its own longest "for …" line and the numbers land in a
+   * different place in each block. Pinning the item column makes the whole list
+   * read as one table down the page.
+   */
+  table-layout: fixed;
+}
+
+.aisle-table th:first-child {
+  width: 36%;
+}
+
+.aisle-table th,
+.aisle-table td {
+  padding: 9px 10px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.aisle-table thead th {
+  padding-bottom: 7px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.aisle-table tbody th {
+  font-weight: 400;
+  padding-left: 0;
+}
+
+.aisle-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.aisle-table .aisle-body {
+  min-width: 0;
+}
+
+.aisle-table tbody tr + tr th,
+.aisle-table tbody tr + tr td {
+  border-top: 1px solid var(--border);
+}
+
+.aisle-share-head,
+.aisle-total-head {
+  text-align: right;
+}
+
+.aisle-share,
+.aisle-total {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.aisle-share {
+  color: var(--text-muted);
+}
+
+/* The column you actually shop from, so it reads first. */
+.aisle-total-head,
+.aisle-total {
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+}
+
+/*
+ * Pinned, because it is the only numeric column carrying a unit and "48 pieces"
+ * needs more room than "48". Under a fixed layout the share columns divide
+ * whatever is left, which is what should give when the table gets crowded.
+ */
+.aisle-total-head {
+  width: 96px;
+}
+
 .aisle-line-kcal {
   text-align: right;
   color: var(--text-faint);
@@ -1074,8 +1168,19 @@
     min-width: 0;
   }
 
-  .plan-grid-wrap {
+  .plan-grid-wrap,
+  .aisle-table-wrap {
     overflow: visible;
+  }
+
+  /* Paper has no scrollbar, so the per-player columns have to fit outright. */
+  .aisle-table {
+    font-size: 0.82rem;
+  }
+
+  .aisle-table th,
+  .aisle-table td {
+    padding: 6px 7px;
   }
 }
 

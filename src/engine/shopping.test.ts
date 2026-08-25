@@ -4,7 +4,13 @@ import { CATALOG } from '../data/products'
 import { buildCart, cartTotals } from './cart'
 import { gradeDay, gradeMeal } from './nutrition'
 import type { CompletedDay, CompletedMeal } from '../state/gameReducer'
-import { formatAmount, shoppingByAisle, shoppingList, shoppingTotal } from './shopping'
+import {
+  formatAmount,
+  formatShare,
+  shoppingByAisle,
+  shoppingList,
+  shoppingTotal,
+} from './shopping'
 
 /** Builds a finished meal the way the reducer would, from real dish data. */
 function meal(dishId: string, slot: CompletedMeal['slot'], servings = 1): CompletedMeal {
@@ -116,6 +122,71 @@ describe('shoppingList', () => {
   })
 })
 
+describe('splitting the list across the table', () => {
+  const WEIGHTS = [2600, 1300]
+
+  it('leaves the columns off a solo run', () => {
+    for (const line of shoppingList(oneDay)) expect(line.perPlayer).toEqual([])
+  })
+
+  it('gives every line a column per player', () => {
+    for (const line of shoppingList(oneDay, WEIGHTS)) {
+      expect(line.perPlayer, line.product.id).toHaveLength(WEIGHTS.length)
+    }
+  })
+
+  it('adds each line back up to its own total', () => {
+    // The columns sit beside the total on screen. If they do not sum to it the
+    // whole table is untrustworthy, however right the split underneath is.
+    for (const line of shoppingList(oneDay, WEIGHTS)) {
+      const summed = line.perPlayer.reduce((a, b) => a + b, 0)
+      expect(
+        summed,
+        `${line.product.id}: ${line.perPlayer.join(' + ')} ≠ ${line.amount}`,
+      ).toBeCloseTo(line.amount, 5)
+    }
+  })
+
+  it('gives the bigger appetite the bigger share', () => {
+    for (const line of shoppingList(oneDay, WEIGHTS)) {
+      if (line.amount < 1) continue // too small to split meaningfully
+      expect(line.perPlayer[0], line.product.id).toBeGreaterThanOrEqual(line.perPlayer[1]!)
+    }
+  })
+
+  it('splits in proportion to appetite, not headcount', () => {
+    const rice = shoppingList(oneDay, [2000, 1000]).find((l) => l.product.id === 'rice-white')!
+    expect(rice.perPlayer[0]! / rice.perPlayer[1]!).toBeCloseTo(2, 1)
+  })
+
+  it('splits evenly when every player has the same target', () => {
+    // Compared in whole tenths: 0.4 − 0.3 is 0.10000000000000003 in binary
+    // floating point, and the noise is in the subtraction, not the shares.
+    for (const line of shoppingList(oneDay, [2000, 2000, 2000])) {
+      const tenths = line.perPlayer.map((n) => Math.round(n * 10))
+      expect(Math.max(...tenths) - Math.min(...tenths), line.product.id).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('carries the split through the aisles unchanged', () => {
+    const flat = shoppingList(oneDay, WEIGHTS)
+    for (const aisle of shoppingByAisle(oneDay, WEIGHTS)) {
+      for (const line of aisle.lines) {
+        const same = flat.find((l) => l.product.id === line.product.id && l.unit === line.unit)!
+        expect(line.perPlayer).toEqual(same.perPlayer)
+      }
+    }
+  })
+
+  it('handles a table of six without losing a gram', () => {
+    const six = [2600, 2400, 2100, 1800, 1500, 1300]
+    for (const line of shoppingList(oneDay, six)) {
+      expect(line.perPlayer).toHaveLength(6)
+      expect(line.perPlayer.reduce((a, b) => a + b, 0), line.product.id).toBeCloseTo(line.amount, 5)
+    }
+  })
+})
+
 describe('shoppingByAisle', () => {
   it('groups every line into an aisle and loses none', () => {
     const flat = shoppingList(oneDay)
@@ -154,6 +225,15 @@ describe('shoppingByAisle', () => {
 describe('formatAmount', () => {
   const line = (amount: number, unit: 'g' | 'ml' | 'piece') =>
     ({ amount, unit }) as Parameters<typeof formatAmount>[0]
+
+  it('leaves the unit off a share, since the total carries it', () => {
+    expect(formatShare(324)).toBe('324')
+    expect(formatShare(6.5)).toBe('6.5')
+  })
+
+  it('shows a share too small to measure as a dash, not a zero', () => {
+    expect(formatShare(0)).toBe('—')
+  })
 
   it('reads naturally per unit', () => {
     expect(formatAmount(line(540, 'g'))).toBe('540 g')

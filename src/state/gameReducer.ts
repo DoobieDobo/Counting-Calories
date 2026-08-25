@@ -21,6 +21,7 @@ import {
 } from '../engine/calories'
 import { buildCart, cartTotals, type Choices, type CartTotals } from '../engine/cart'
 import { gradeDay, gradeMeal, type DayVerdict, type MealVerdict } from '../engine/nutrition'
+import { largestRemainder } from '../engine/split'
 
 export type Mode = 'solo' | 'coop'
 
@@ -193,31 +194,20 @@ export function mealShares(
   if (players.length === 0) return []
 
   const budgets = players.map((p) => playerMealBudget(p, slot))
-  const pot = budgets.reduce((a, b) => a + b, 0)
-
-  // Degenerate case: no appetite at all. Split evenly rather than divide by zero.
-  if (pot <= 0) {
-    const even = Math.round(totalKcal / players.length)
-    return players.map((player, i) => ({ player, kcal: even, budget: budgets[i]! }))
-  }
-
-  const exact = budgets.map((b) => (totalKcal * b) / pot)
-  const floors = exact.map((n) => Math.floor(n))
-  let leftover = totalKcal - floors.reduce((a, b) => a + b, 0)
-
-  // Hand the remaining whole calories to whoever was rounded down hardest.
-  const order = exact
-    .map((n, i) => ({ i, fraction: n - Math.floor(n) }))
-    .sort((a, b) => b.fraction - a.fraction)
-
-  const kcal = [...floors]
-  for (const { i } of order) {
-    if (leftover <= 0) break
-    kcal[i]! += 1
-    leftover -= 1
-  }
+  const kcal = largestRemainder(totalKcal, budgets)
 
   return players.map((player, i) => ({ player, kcal: kcal[i]!, budget: budgets[i]! }))
+}
+
+/**
+ * Each player's share of everything the table eats, as a weight.
+ *
+ * The daily target rather than one meal's budget, because the shopping list
+ * merges every meal of every day into one line — over a whole block, someone on
+ * 2,600 a day eats twice as much of it as someone on 1,300.
+ */
+export function portionWeights(players: readonly Player[]): number[] {
+  return players.map((p) => p.target.target)
 }
 
 /**
