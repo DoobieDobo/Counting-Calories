@@ -8,7 +8,8 @@ import { getDish } from '../data/dishes'
 import { CATALOG } from '../data/products'
 import { buildCart, cartTotals, formatQty, optionKcal } from '../engine/cart'
 import { pick } from '../engine/random'
-import { pickerFor } from '../state/gameReducer'
+import { flagsFor } from '../data/dietary'
+import { pickerFor, tableConcerns } from '../state/gameReducer'
 import { useGame } from '../state/GameContext'
 import { seatColor } from '../components/PlayerChips'
 
@@ -48,6 +49,7 @@ export function Store() {
 
   const picker = pickerFor(state)
   const pickerIndex = picker ? state.players.findIndex((p) => p.id === picker.id) : -1
+  const concerns = tableConcerns(state.players)
 
   function choose(optionId: string | null) {
     setPreview(undefined)
@@ -103,10 +105,14 @@ export function Store() {
           title={slot.label}
           choices={slot.options.map((option) => {
             const product = CATALOG[option.productId]!
+            // The vote panel must not be blind to a flag the shelf shows.
+            const warn = flagsFor(product.id, concerns)
+              .map((f) => f.label)
+              .join(', ')
             return {
               id: option.id,
               label: `${product.name} · ${optionKcal(product, option.use, current.servings)} cal`,
-              sublabel: `${product.pack} — uses ${formatQty(option.use, current.servings)}`,
+              sublabel: `${product.pack} — uses ${formatQty(option.use, current.servings)}${warn ? ` · ⚠ ${warn}` : ''}`,
             }
           })}
           players={state.players}
@@ -130,6 +136,7 @@ export function Store() {
                 spent={spent}
                 budget={current.budget}
                 servings={current.servings}
+                concerns={concerns}
                 onSelect={() => choose(option.id)}
                 onPreview={setPreview}
               />

@@ -128,6 +128,117 @@
   color: var(--text-muted);
 }
 
+/* ── Dietary flags ─────────────────────────────────────────────────────── */
+
+/*
+ * A different visual language from .product-tag on purpose: those describe the
+ * product, these are addressed to the player.
+ */
+.diet-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.diet-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 3px 7px;
+  border-radius: 5px;
+  border: 1px solid;
+}
+
+.diet-flag-avoid {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+.diet-flag-caution {
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-color: color-mix(in srgb, var(--warn) 35%, transparent);
+}
+
+.diet-flag-more {
+  color: var(--text-faint);
+  background: var(--bg-sunken);
+  border-color: var(--border);
+}
+
+.product-flagged {
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
+}
+
+.flagged-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.flagged-item {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  font-size: 0.92rem;
+  color: inherit;
+}
+
+.flagged-item:hover {
+  border-color: currentcolor;
+}
+
+.flagged-change {
+  margin-left: auto;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.concerns-open {
+  align-self: flex-start;
+}
+
+.concern-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.concern-caveats {
+  margin: 0;
+  padding: 0 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 0.89rem;
+  color: var(--text-muted);
+}
+
+.concern-warning {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  border-left: 3px solid var(--warn);
+  padding-left: 12px;
+}
+
 /* ── Macro bar ─────────────────────────────────────────────────────────── */
 
 .macro {

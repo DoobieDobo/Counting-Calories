@@ -11,6 +11,7 @@ import {
   mealPot,
   pickerFor,
   soleMenuFor,
+  tableConcerns,
   type Action,
   type GameState,
 } from './gameReducer'
@@ -311,6 +312,31 @@ describe('co-op servings', () => {
     duo = shopCheaply(duo)
     duo = gameReducer(duo, { type: 'CHECKOUT' })
     expect(duo.history[0]!.servings).toBe(2)
+  })
+})
+
+describe('dietary concerns across the table', () => {
+  it('has none when nobody set any', () => {
+    expect(tableConcerns(soloStart().players)).toEqual([])
+  })
+
+  it('takes the union, so one player’s allergy constrains the shared shelf', () => {
+    const state = run([
+      { type: 'SET_MODE', mode: 'coop' },
+      { type: 'ADD_PLAYER', profile: profile({ name: 'Kay', avoid: ['shellfish'] }) },
+      { type: 'ADD_PLAYER', profile: profile({ name: 'Sam', avoid: ['halal', 'shellfish'] }) },
+    ])
+    expect(tableConcerns(state.players).sort()).toEqual(['halal', 'shellfish'])
+  })
+
+  it('tolerates a player saved before the field existed', () => {
+    const legacy = profile()
+    delete (legacy as { avoid?: unknown }).avoid
+    const state = run([
+      { type: 'SET_MODE', mode: 'solo' },
+      { type: 'ADD_PLAYER', profile: legacy },
+    ])
+    expect(tableConcerns(state.players)).toEqual([])
   })
 })
 

@@ -110,11 +110,19 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1 1 180px;
   min-width: 0;
 }
 
-.field-narrow {
+/*
+ * The flex basis only applies inside a row. The enclosing fieldset is a column,
+ * where a `flex: 1 1 180px` on a field is read as a 180px *height* — which was
+ * leaving a large empty gap under any field that stood on its own.
+ */
+.field-row .field {
+  flex: 1 1 180px;
+}
+
+.field-row .field-narrow {
   flex: 0 1 120px;
 }
 

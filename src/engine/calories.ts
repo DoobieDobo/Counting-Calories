@@ -5,6 +5,8 @@
  * without any React in the way.
  */
 
+import type { ConcernId } from '../data/dietary'
+
 export type Sex = 'male' | 'female' | 'unspecified'
 
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'athlete'
@@ -23,6 +25,12 @@ export interface Profile {
   sex: Sex
   activity: ActivityLevel
   goal: Goal
+  /**
+   * Dietary concerns to flag on the shelf — allergies, gout, halal and so on.
+   * Optional because saves written before the feature existed have no such
+   * field; every reader must treat that as an empty list.
+   */
+  avoid?: ConcernId[]
 }
 
 export interface ActivityOption {

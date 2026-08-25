@@ -144,6 +144,24 @@ describe('rejecting stale saves', () => {
     expect(load()).toBeNull()
   })
 
+  it('still loads a profile saved before dietary concerns existed', () => {
+    // `avoid` is optional precisely so an older save stays playable; it must
+    // read as "no concerns", not as a reason to throw the run away.
+    const older = coopRun()
+    const profileWithoutAvoid = { ...older.players[0]!.profile } as Record<string, unknown>
+    delete profileWithoutAvoid.avoid
+    store.set(
+      KEY,
+      JSON.stringify({
+        ...older,
+        players: [{ ...older.players[0]!, profile: profileWithoutAvoid }],
+      }),
+    )
+    const loaded = load()
+    expect(loaded).not.toBeNull()
+    expect(loaded!.players[0]!.profile.avoid).toBeUndefined()
+  })
+
   it('refuses malformed JSON rather than throwing', () => {
     store.set(KEY, '{not json')
     expect(load()).toBeNull()

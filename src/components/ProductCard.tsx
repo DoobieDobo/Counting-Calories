@@ -1,6 +1,8 @@
+import { flagsFor, type ConcernId } from '../data/dietary'
 import type { Product, SlotOption } from '../data/types'
 import { formatQty, optionNutrition } from '../engine/cart'
 import { macroSplit } from '../engine/nutrition'
+import { DietBadge } from './DietBadge'
 import { MacroBar } from './MacroBar'
 
 interface Props {
@@ -12,6 +14,8 @@ interface Props {
   budget: number
   /** Portions being cooked — one per player. Scales the amount and the price. */
   servings: number
+  /** Dietary concerns the table has switched on. */
+  concerns: readonly ConcernId[]
   onSelect: () => void
   onPreview: (kcal: number | undefined) => void
 }
@@ -30,16 +34,19 @@ export function ProductCard({
   spent,
   budget,
   servings,
+  concerns,
   onSelect,
   onPreview,
 }: Props) {
   const nutrition = optionNutrition(product, option.use, servings)
   const unaffordable = spent + nutrition.kcal > budget
+  const flags = flagsFor(product.id, concerns)
+  const flagged = flags.some((f) => f.level === 'avoid')
 
   return (
     <button
       type="button"
-      className={`product${selected ? ' product-selected' : ''}${unaffordable ? ' product-over' : ''}`}
+      className={`product${selected ? ' product-selected' : ''}${unaffordable ? ' product-over' : ''}${flagged ? ' product-flagged' : ''}`}
       onClick={onSelect}
       onMouseEnter={() => onPreview(nutrition.kcal)}
       onMouseLeave={() => onPreview(undefined)}
@@ -75,6 +82,8 @@ export function ProductCard({
             </span>
           ))}
         </span>
+
+        <DietBadge flags={flags} />
       </span>
 
       <span className="product-price">

@@ -12,6 +12,8 @@ import {
 } from '../engine/cart'
 import { macroSplit } from '../engine/nutrition'
 import { MEAL_LABELS } from '../engine/calories'
+import { flagsFor } from '../data/dietary'
+import { tableConcerns } from '../state/gameReducer'
 import { useGame } from '../state/GameContext'
 
 /**
@@ -33,6 +35,13 @@ export function Cart() {
 
   const skipped = dish.slots.filter((s) => current.choices[s.id] === null)
   const skippedRequired = skipped.filter((s) => !s.optional)
+
+  // Last chance to notice a flag before it's cooked.
+  const concerns = tableConcerns(state.players)
+  const flaggedLines = lines
+    .map((line) => ({ line, flags: flagsFor(line.product.id, concerns) }))
+    .filter((entry) => entry.flags.length > 0)
+  const anyAvoid = flaggedLines.some((e) => e.flags.some((f) => f.level === 'avoid'))
 
   // The single most expensive line, so a full cart has something to point at.
   const priciest = lines.reduce<(typeof lines)[number] | null>(
@@ -162,6 +171,42 @@ export function Cart() {
           >
             Go and change it
           </button>
+        </div>
+      )}
+
+      {flaggedLines.length > 0 && (
+        <div className={`notice ${anyAvoid ? 'notice-danger' : 'notice-warn'}`} role="note">
+          <strong>
+            {anyAvoid
+              ? 'Some of this is on your avoid list.'
+              : 'A few things here are worth a second look.'}
+          </strong>
+          <ul className="flagged-list">
+            {flaggedLines.map(({ line, flags }) => (
+              <li key={line.slotId}>
+                <button
+                  type="button"
+                  className="flagged-item"
+                  onClick={() =>
+                    dispatch({
+                      type: 'GOTO_INGREDIENT',
+                      index: dish.slots.findIndex((s) => s.id === line.slotId),
+                    })
+                  }
+                >
+                  <span aria-hidden="true">{line.product.emoji}</span>
+                  <span>
+                    <strong>{line.product.name}</strong> — {flags.map((f) => `${f.label} (${f.why})`).join('; ')}
+                  </span>
+                  <span className="flagged-change">change</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="lede">
+            Flagged from the obvious ingredients only — it can't know how something was made.
+            Checking out anyway is fine; it's your cart.
+          </p>
         </div>
       )}
 

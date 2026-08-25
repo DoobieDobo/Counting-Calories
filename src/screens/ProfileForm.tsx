@@ -8,9 +8,17 @@ import {
   type Profile,
   type Sex,
 } from '../engine/calories'
+import {
+  CONCERNS,
+  CONCERN_GROUP_LABELS,
+  type ConcernGroup,
+  type ConcernId,
+} from '../data/dietary'
 import { useGame } from '../state/GameContext'
 
 type Units = 'metric' | 'imperial'
+
+const CONCERN_ORDER: ConcernGroup[] = ['allergy', 'intolerance', 'health', 'faith', 'diet']
 
 const SEXES: { id: Sex; label: string }[] = [
   { id: 'female', label: 'Female' },
@@ -42,7 +50,17 @@ export function ProfileForm() {
   const [sex, setSex] = useState<Sex>('unspecified')
   const [activity, setActivity] = useState<ActivityLevel>('light')
   const [goal, setGoal] = useState<Goal>('maintain')
+  const [avoid, setAvoid] = useState<ConcernId[]>([])
+  const [showConcerns, setShowConcerns] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  function toggleConcern(id: ConcernId) {
+    setAvoid((current) =>
+      current.includes(id) ? current.filter((c) => c !== id) : [...current, id],
+    )
+  }
+
+  const activeCaveats = CONCERNS.filter((c) => avoid.includes(c.id) && c.caveat)
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -73,6 +91,7 @@ export function ProfileForm() {
       sex,
       activity,
       goal,
+      avoid,
     }
 
     setError(null)
@@ -273,6 +292,67 @@ export function ProfileForm() {
             </button>
           ))}
         </div>
+      </fieldset>
+
+      <fieldset className="field-group card">
+        <legend>Anything to avoid?</legend>
+
+        {!showConcerns && avoid.length === 0 ? (
+          <button
+            type="button"
+            className="btn btn-secondary concerns-open"
+            onClick={() => setShowConcerns(true)}
+          >
+            Set up allergies, intolerances and other flags
+          </button>
+        ) : (
+          <>
+            <p className="lede">
+              Anything you tick gets flagged on the shelf and again at the checkout. Nothing is
+              ever blocked — it's your cart.
+            </p>
+
+            {CONCERN_ORDER.map((group) => {
+              const inGroup = CONCERNS.filter((c) => c.group === group)
+              if (inGroup.length === 0) return null
+              return (
+                <div key={group} className="concern-group">
+                  <span className="field-label">{CONCERN_GROUP_LABELS[group]}</span>
+                  <div className="chip-row" role="group" aria-label={CONCERN_GROUP_LABELS[group]}>
+                    {inGroup.map((concern) => (
+                      <button
+                        key={concern.id}
+                        type="button"
+                        className={`chip${avoid.includes(concern.id) ? ' chip-active' : ''}`}
+                        onClick={() => toggleConcern(concern.id)}
+                        aria-pressed={avoid.includes(concern.id)}
+                        title={concern.prompt}
+                      >
+                        {concern.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+
+            {activeCaveats.length > 0 && (
+              <ul className="concern-caveats">
+                {activeCaveats.map((c) => (
+                  <li key={c.id}>
+                    <strong>{c.label}:</strong> {c.caveat}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <p className="concern-warning" role="note">
+              These flags come from the obvious ingredients only. They can't tell you how
+              something was made, what it shared a production line with, or whether it was
+              certified. <strong>If you have a real allergy, read the actual packet.</strong>
+            </p>
+          </>
+        )}
       </fieldset>
 
       {error && (

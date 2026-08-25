@@ -9,6 +9,7 @@
 import { CATALOG } from '../data/products'
 import { getDish } from '../data/dishes'
 import { MENUS_BY_MEAL } from '../data/menus'
+import type { ConcernId } from '../data/dietary'
 import type { MenuId } from '../data/types'
 import {
   MEAL_LABELS,
@@ -134,6 +135,20 @@ export function mealPot(players: readonly Player[], slot: MealSlot, banked: numb
 /** Combined daily target across the table. */
 export function dayTarget(players: readonly Player[]): number {
   return players.reduce((sum, p) => sum + p.target.target, 0)
+}
+
+/**
+ * Every dietary concern anyone at the table has switched on.
+ *
+ * The union, not the intersection: the shelf is shared, so one person's allergy
+ * is the whole table's constraint.
+ */
+export function tableConcerns(players: readonly Player[]): ConcernId[] {
+  const all = new Set<ConcernId>()
+  for (const player of players) {
+    for (const concern of player.profile.avoid ?? []) all.add(concern)
+  }
+  return [...all]
 }
 
 /**
