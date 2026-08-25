@@ -1,7 +1,12 @@
 name: Deploy to GitHub Pages
 
-# Publishes the built game to GitHub Pages. Needs Pages enabled for the repo
-# with "GitHub Actions" as the source (Settings → Pages).
+# Publishes the built game to GitHub Pages.
+#
+# `enablement: true` below turns Pages on and points it at Actions the first
+# time this runs, so nobody has to find Settings → Pages by hand — which is a
+# genuine obstacle from the GitHub mobile app, where that screen is not exposed.
+# It needs the repo to be public (or a paid plan) and the `pages: write`
+# permission granted above.
 on:
   push:
     branches: [main, 'claude/**']
@@ -36,6 +41,8 @@ jobs:
           GITHUB_PAGES: 'true'
 
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
