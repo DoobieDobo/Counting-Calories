@@ -2,11 +2,19 @@ name: Deploy to GitHub Pages
 
 # Publishes the built game to GitHub Pages.
 #
-# `enablement: true` below turns Pages on and points it at Actions the first
-# time this runs, so nobody has to find Settings → Pages by hand — which is a
-# genuine obstacle from the GitHub mobile app, where that screen is not exposed.
-# It needs the repo to be public (or a paid plan) and the `pages: write`
-# permission granted above.
+# ONE-TIME SETUP, and it cannot be done from here. Pages has to be switched on
+# for the repo: Settings → Pages → Build and deployment → Source: GitHub Actions.
+# Until that is done every run of this workflow fails at configure-pages with
+# "Get Pages site failed".
+#
+# `enablement: true` on configure-pages looks like it would do this
+# automatically, and it was tried: the default GITHUB_TOKEN cannot create a
+# Pages site ("Resource not accessible by integration"), because creating one
+# needs admin rights the token is not granted. It would take a personal access
+# token, which is not worth storing for a single switch.
+#
+# The GitHub mobile app does not expose the Pages screen at all — reach it from
+# a desktop browser, or from a phone via github.com with "Desktop site" on.
 on:
   push:
     branches: [main, 'claude/**']
@@ -41,8 +49,6 @@ jobs:
           GITHUB_PAGES: 'true'
 
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
