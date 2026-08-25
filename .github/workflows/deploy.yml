@@ -2,22 +2,28 @@ name: Deploy to GitHub Pages
 
 # Publishes the built game to GitHub Pages.
 #
-# ONE-TIME SETUP, and it cannot be done from here. Pages has to be switched on
-# for the repo: Settings → Pages → Build and deployment → Source: GitHub Actions.
-# Until that is done every run of this workflow fails at configure-pages with
-# "Get Pages site failed".
+# DEPLOYS FROM `main` ONLY, and that is not a preference. Switching Pages on
+# creates a `github-pages` environment whose deployment-branch policy admits the
+# default branch and nothing else, so the deploy job on any other branch is
+# refused before it starts — it reports failure in about two seconds with no
+# steps and no log to download, which reads like a broken runner and is not one.
 #
-# `enablement: true` on configure-pages looks like it would do this
-# automatically, and it was tried: the default GITHUB_TOKEN cannot create a
-# Pages site ("Resource not accessible by integration"), because creating one
-# needs admin rights the token is not granted. It would take a personal access
-# token, which is not worth storing for a single switch.
+# Learned the hard way: a build from a feature branch went fully green, uploaded
+# its artifact, and was then thrown out at the last step, while a workflow run
+# from `main` ten minutes later deployed without complaint.
 #
-# The GitHub mobile app does not expose the Pages screen at all — reach it from
-# a desktop browser, or from a phone via github.com with "Desktop site" on.
+# So develop on the working branch, merge to `main`, and the merge publishes.
+# Widening the policy (Settings → Environments → github-pages → Deployment
+# branches) would also work, but the default branch is the ordinary place for
+# this and needs no setting anybody has to remember.
+#
+# Pages itself is already switched on (Settings → Pages → Source: GitHub
+# Actions). It cannot be switched on from here: `enablement: true` on
+# configure-pages needs admin rights the default GITHUB_TOKEN is not granted,
+# and fails with "Resource not accessible by integration".
 on:
   push:
-    branches: [main, 'claude/**']
+    branches: [main]
   workflow_dispatch:
 
 permissions:
