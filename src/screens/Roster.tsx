@@ -17,11 +17,8 @@ export function Roster() {
         <p className="eyebrow">Co-op</p>
         <h1>The table</h1>
         <p className="lede">
-          Everyone's daily target goes into one pot, and every dish is cooked one serving per
-          player. Portions aren't equal — each of you eats in proportion to what you actually
-          need, so a bigger target means a bigger plate. You'll pick the menu together and take
-          turns committing each ingredient, so the whole cart gets talked about rather than
-          just decided.
+          Everyone's daily target goes into one pot. You'll pick the menu together and take turns
+          choosing each ingredient.
         </p>
       </div>
 

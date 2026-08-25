@@ -57,16 +57,15 @@ function BudgetNote({ player, named }: { player: Player; named: boolean }) {
           {target.floored ? (
             <>
               Going faster would put you under{' '}
-              <span className="num">{target.floor.toLocaleString()}</span> calories a day, which is
-              the least this game will ever set.
+              <span className="num">{target.floor.toLocaleString()}</span> calories a day, so the
+              budget below moves at about {weekly(target.pace)} a week instead.
             </>
           ) : (
             <>
-              Half a kilo a week would be a big share of what you burn in a day.
+              The budget below moves at about {weekly(target.pace)} a week — the fastest this game
+              will go at your numbers.
             </>
-          )}{' '}
-          The budget below moves at about {weekly(target.pace)} a week instead — the fastest this
-          game will go at your numbers.
+          )}
         </div>
       )
 

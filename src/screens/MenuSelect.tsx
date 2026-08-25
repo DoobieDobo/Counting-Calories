@@ -34,7 +34,7 @@ export function MenuSelect() {
         {state.banked > 0 && (
           <p className="lede">
             You carried <strong className="num">{state.banked.toLocaleString()}</strong> calories
-            over from earlier. They're already in the budget above.
+            over from earlier.
           </p>
         )}
       </div>
