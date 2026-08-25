@@ -14,12 +14,24 @@ import { MENUS, MENUS_BY_MEAL } from './menus'
 import { DISHES, dishesForMenu } from './dishes'
 
 /**
- * A deliberately small daily target — the low end of what the game will ever
- * hand out. Every dish has to be buildable inside a meal budget derived from
- * it, or the menu contains a dish nobody can ever cook.
+ * A deliberately small daily target. Every dish has to be buildable inside a
+ * meal budget derived from it, or the menu holds a dish nobody can ever cook.
+ *
+ * This is no longer the lowest the game will hand out. The budget used to clamp
+ * at 1,200 for everyone; it now holds people at their own maintenance instead,
+ * which for a small enough body is less than that. `SMALLEST_BODY` covers that
+ * end, with a weaker guarantee — see below.
  */
 const LOW_DAILY_TARGET = 1200
 const LOW_BUDGETS = mealBudgets(LOW_DAILY_TARGET, ['breakfast', 'lunch', 'dinner'])
+
+/**
+ * The lowest daily target the profile form can produce: 40 kg, 140 cm, 100
+ * years old, sedentary. Not a likely player, but reachable, and the game has to
+ * remain playable there.
+ */
+const SMALLEST_BODY = 737
+const SMALLEST_BUDGETS = mealBudgets(SMALLEST_BODY, ['breakfast', 'lunch', 'dinner'])
 
 describe('product catalogue', () => {
   it('has unique ids', () => {
@@ -206,6 +218,23 @@ describe('playability', () => {
     for (const dish of DISHES) {
       const budget = dish.menu === 'breakfast' ? LOW_BUDGETS.breakfast : LOW_BUDGETS.dinner
       expect(priciestBuild(dish, CATALOG), dish.id).toBeGreaterThan(budget)
+    }
+  })
+
+  it('leaves every menu something cookable even at the smallest budget', () => {
+    // Below 1,200 not every dish fits, and that is fine — a smaller budget
+    // should mean fewer options. What is not fine is a menu with nothing in it,
+    // which would strand anyone who picked it.
+    for (const slot of ['breakfast', 'lunch', 'dinner'] as const) {
+      for (const menuId of MENUS_BY_MEAL[slot]) {
+        const cookable = dishesForMenu(menuId).filter(
+          (dish) => cheapestBuild(dish, CATALOG) <= SMALLEST_BUDGETS[slot],
+        )
+        expect(
+          cookable.length,
+          `${slot}/${menuId}: nothing under ${SMALLEST_BUDGETS[slot]} kcal`,
+        ).toBeGreaterThan(0)
+      }
     }
   })
 

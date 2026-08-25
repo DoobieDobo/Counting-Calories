@@ -3,6 +3,8 @@ import {
   ACTIVITY_LEVELS,
   GOALS,
   convert,
+  paceDelta,
+  tdee,
   type ActivityLevel,
   type Goal,
   type Profile,
@@ -61,6 +63,24 @@ export function ProfileForm() {
   }
 
   const activeCaveats = CONCERNS.filter((c) => avoid.includes(c.id) && c.caveat)
+
+  /**
+   * The size of the move for *this* body, previewed live beside each goal.
+   * It is capped at a share of maintenance, so a fixed ±500 on the buttons
+   * would be a promise the budget screen then has to walk back.
+   */
+  const livePace = (() => {
+    const heightCm =
+      units === 'metric'
+        ? Number(cm)
+        : convert.feetInchesToCm(Number(feet) || 0, Number(inches) || 0)
+    const weightKg = units === 'metric' ? Number(kg) : convert.poundsToKg(Number(lb))
+    const ageYears = Number(age)
+    if (![heightCm, weightKg, ageYears].every((n) => Number.isFinite(n) && n > 0)) return null
+    const maintenance = tdee({ heightCm, weightKg, age: ageYears, sex, activity })
+    if (!Number.isFinite(maintenance) || maintenance <= 0) return null
+    return Math.round(Math.abs(paceDelta(maintenance, 'lose')))
+  })()
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -287,7 +307,11 @@ export function ProfileForm() {
                 <span className="lede">{g.detail}</span>
               </span>
               <span className="num option-row-side">
-                {g.delta === 0 ? '±0' : g.delta > 0 ? `+${g.delta}` : g.delta}
+                {livePace === null || g.direction === 0
+                  ? '±0'
+                  : g.direction > 0
+                    ? `+${livePace}`
+                    : `−${livePace}`}
               </span>
             </button>
           ))}

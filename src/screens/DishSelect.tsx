@@ -21,6 +21,7 @@ export function DishSelect() {
   const dishes = dishesForMenu(state.current.menuId)
   const budget = state.current.budget
   const servings = state.current.servings
+  const affordableDishes = dishes.filter((d) => cheapestBuild(d, CATALOG, servings) <= budget)
 
   return (
     <div className="screen">
@@ -93,7 +94,13 @@ export function DishSelect() {
         <div className="btn-row">
           <RollButton
             onRoll={() => {
-              const dish = pick(dishes)
+              // Rolling is for players who don't want to choose, so it must not
+              // hand them something they cannot build. Choosing an over-budget
+              // dish from the grid is a decision, with a warning on the card;
+              // being given one by a dice roll is just a dead end. Every menu
+              // keeps at least one affordable dish at any budget the game sets,
+              // so the fallback is a belt-and-braces guard, not a live path.
+              const dish = pick(affordableDishes.length > 0 ? affordableDishes : dishes)
               if (dish) dispatch({ type: 'CHOOSE_DISH', dishId: dish.id })
             }}
           />

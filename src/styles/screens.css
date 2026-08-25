@@ -366,6 +366,17 @@
   color: color-mix(in srgb, var(--warn) 82%, var(--text));
 }
 
+/*
+ * For telling someone something true about their own body. "You're already at a
+ * healthy weight" is not a warning, and styling it as one would make the game
+ * sound like it disapproves of the person reading it.
+ */
+.notice-info {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  color: color-mix(in srgb, var(--accent) 78%, var(--text));
+}
+
 .notice-danger {
   background: var(--danger-soft);
   border-color: color-mix(in srgb, var(--danger) 32%, transparent);

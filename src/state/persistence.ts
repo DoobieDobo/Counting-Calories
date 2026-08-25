@@ -16,8 +16,8 @@ import { RUN_MEALS, initialState, type GameState } from './gameReducer'
  * rehydrated with it undefined, every consumer took the `= 1` default, and the
  * bug that release had just fixed came silently back.
  */
-const KEY = 'counting-calories:run:v2'
-const RETIRED_KEYS = ['counting-calories:run:v1']
+const KEY = 'counting-calories:run:v3'
+const RETIRED_KEYS = ['counting-calories:run:v1', 'counting-calories:run:v2']
 
 export function save(state: GameState): void {
   try {
@@ -64,6 +64,10 @@ function isValid(value: unknown): value is GameState {
 
   for (const player of s.players) {
     if (!player?.profile || !player?.target || typeof player.id !== 'string') return false
+    // A v2 target was computed with a flat ±500 and a floor that could sit above
+    // maintenance. It still validates structurally, so resuming one would keep
+    // playing the old budget for the same body — the `servings` trap again.
+    if (typeof player.target.band !== 'string') return false
   }
 
   // A run pointing at a dish this build no longer ships would render an empty

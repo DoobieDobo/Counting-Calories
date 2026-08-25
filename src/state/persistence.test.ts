@@ -9,9 +9,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { clear, initialGameState, load, save } from './persistence'
 import { initialState, type GameState } from './gameReducer'
-import type { Profile } from '../engine/calories'
+import { dailyTarget, type Profile } from '../engine/calories'
 
-const KEY = 'counting-calories:run:v2'
+const KEY = 'counting-calories:run:v3'
 const OLD_KEY = 'counting-calories:run:v1'
 
 /** Minimal in-memory localStorage, since these tests run under node. */
@@ -39,7 +39,7 @@ const profile: Profile = {
 const player = {
   id: 'player-1',
   profile,
-  target: { bmr: 1600, tdee: 2200, target: 2200, floored: false, floor: 1500 },
+  target: dailyTarget(profile),
 }
 
 function coopRun(overrides: Partial<GameState> = {}): GameState {
@@ -125,6 +125,22 @@ describe('rejecting stale saves', () => {
       ],
     })
     store.set(KEY, JSON.stringify(withHistory))
+    expect(load()).toBeNull()
+  })
+
+  it('refuses a target computed by the old flat-500 arithmetic', () => {
+    // A v2 target is structurally complete and numerically stale: the same body
+    // now gets a different budget. Resuming one would quietly play the old game.
+    const stale = coopRun()
+    const oldShapeTarget = { ...stale.players[0]!.target } as Record<string, unknown>
+    delete oldShapeTarget.band
+    store.set(
+      KEY,
+      JSON.stringify({
+        ...stale,
+        players: [{ ...stale.players[0]!, target: oldShapeTarget }],
+      }),
+    )
     expect(load()).toBeNull()
   })
 
