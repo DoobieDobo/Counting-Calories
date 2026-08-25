@@ -117,7 +117,7 @@ export function Store() {
             return {
               id: option.id,
               label: `${product.name} · ${optionKcal(product, option.use, current.servings)} cal`,
-              sublabel: `${product.pack} — uses ${formatQty(option.use, current.servings)}${warn ? ` · ⚠ ${warn}` : ''}`,
+              sublabel: `Uses ${formatQty(option.use, current.servings)}${warn ? ` · ⚠ ${warn}` : ''}`,
             }
           })}
           players={state.players}
@@ -157,17 +157,21 @@ export function Store() {
             <span className="product-emoji" aria-hidden="true">
               🚫
             </span>
+            {/* Same header shape as ProductCard: the price belongs beside the
+                name, not on a row of its own below everything. */}
             <span className="product-body">
-              <span className="product-name">Leave it out</span>
+              <span className="product-head">
+                <span className="product-name">Leave it out</span>
+                <span className="product-price">
+                  <strong className="num">0</strong>
+                  <span className="product-price-unit">cal</span>
+                </span>
+              </span>
               <span className="product-use">
                 {slot.optional
                   ? 'Not everything needs to go in the cart.'
                   : "You'll notice it missing — but it's free."}
               </span>
-            </span>
-            <span className="product-price">
-              <strong className="num">0</strong>
-              <span className="product-price-unit">cal</span>
             </span>
           </button>
         </div>

@@ -32,11 +32,9 @@ export function DishSelect() {
           {servings > 1 && ` · ${servings} servings`}
         </p>
         <h1>What are you cooking?</h1>
-        <p className="lede">
-          The range under each dish is what it costs built as cheaply as possible, up to built
-          without restraint. Most of that difference is choices you're about to make.
-          {servings > 1 && ` Priced for ${servings} servings, since you're all eating.`}
-        </p>
+        {servings > 1 && (
+          <p className="lede">Priced for {servings} servings, since you're all eating.</p>
+        )}
       </div>
 
       {state.mode === 'coop' && <PlayerChips players={state.players} />}

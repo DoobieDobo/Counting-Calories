@@ -110,7 +110,7 @@ export const CONCERNS: readonly Concern[] = [
     group: 'health',
     prompt: 'Flags the foods actually linked to gout attacks',
     caveat:
-      'Flagged by gout risk, not purine content — so vegetables, beans and lentils stay unflagged even though they are purine-rich. Dairy is not flagged; it lowers risk.',
+      'Food that increases gout risk, not necessarily high purine content.',
     groups: [
       {
         level: 'avoid',
@@ -136,7 +136,7 @@ export const CONCERNS: readonly Concern[] = [
     group: 'faith',
     prompt: 'Flags pork and alcohol',
     caveat:
-      'Flags pork and alcohol by ingredient. It cannot tell you whether anything else was slaughtered or certified halal — check the packaging for that.',
+      'Food that contains pork and alcohol. Does not guarantee actual certification.',
     groups: [{ level: 'avoid', why: 'pork', ids: PORK }],
   },
 
@@ -204,7 +204,7 @@ export const CONCERNS: readonly Concern[] = [
     group: 'allergy',
     prompt: 'Soy allergy',
     caveat:
-      'Refined soybean oil is not flagged; it is generally tolerated. The soy protein sources are.',
+      'Excluding soybean oil.',
     groups: [
       { level: 'avoid', why: 'soy', ids: ['soy-sauce', 'soy-milk', 'tofu-firm', 'tofu-fried'] },
       { level: 'avoid', why: 'soy-based sauce', ids: ['hoisin', 'black-bean-sauce', 'doubanjiang', 'oyster-sauce'] },
@@ -240,7 +240,7 @@ export const CONCERNS: readonly Concern[] = [
     group: 'intolerance',
     prompt: 'Lactose intolerant',
     caveat:
-      'Not the same as a milk allergy. Butter, parmesan and aged cheddar are very low in lactose, and strained yogurt is usually fine, so none of those are flagged — but they would be under a milk allergy.',
+      'Not the same as a milk allergy. Butter, parmesan and aged cheddar are very low in lactose, and strained yogurt is usually fine.',
     groups: [
       {
         level: 'avoid',
@@ -281,7 +281,7 @@ export const CONCERNS: readonly Concern[] = [
     group: 'intolerance',
     prompt: 'Following a low-FODMAP diet',
     caveat:
-      'This one flags a lot by its nature — onion, garlic, wheat, legumes and milk are all high-FODMAP. It is normally a short elimination phase, not a way to eat forever.',
+      'FODMAP stands for fermentable oligosaccharides, disaccharides, monosaccharides, and polyols. These are short-chain carbohydrates and sugar alcohols that the small intestine poorly absorbs. When they pass into the large intestine, gut bacteria ferment them, which can cause gas, bloating, and stomach pain.',
     groups: [
       { level: 'avoid', why: 'high-FODMAP allium', ids: ['onion', 'garlic', 'scallion'] },
       { level: 'avoid', why: 'legume — high in galacto-oligosaccharides', ids: ['monggo', 'lentils', 'chickpeas', 'chickpeas-dried', 'kidney-beans', 'hummus', 'falafel', 'soy-milk'] },
