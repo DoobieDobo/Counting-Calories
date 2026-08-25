@@ -11,6 +11,13 @@
  *   dist/artifact.html     page content only, for hosts that supply their own
  *                          <!doctype>/<html>/<head>/<body> wrapper
  *
+ * A warning learned the hard way: some embedding hosts silently truncate page
+ * content at a size far below what their docs suggest — Claude Artifacts cuts at
+ * roughly 36 KB total, including its own ~11 KB runtime. A truncated inline
+ * script is a syntax error, so the symptom is a blank page with nothing in the
+ * console. `standalone.html` is ~294 KB and will not survive that. Always check
+ * the *published* byte count against the source, not just that the file wrote.
+ *
  * Run via `npm run build:standalone`.
  */
 

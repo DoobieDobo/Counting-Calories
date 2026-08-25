@@ -23,21 +23,33 @@ Same dish. Same slot. A six-fold difference. That's the game.
 
 ## Play it
 
-**Easiest — nothing to install:** <https://claude.ai/code/artifact/bc528df3-e281-4bed-908a-f4eb35d599dc>
-
-A snapshot of the whole game in one page. Works on a phone. It doesn't track this
-repo, so it needs republishing after changes — see *A single-file build* below.
-
-**Permanent URL:** <https://doobiedobo.github.io/Counting-Calories/> — updates on
-every push, once Pages is switched on (Settings → Pages → Source: **GitHub
-Actions**). Until someone does that once, this link 404s.
-
-**Locally:**
+**On a phone, with nothing installed:** build the single file and open it.
 
 ```sh
 npm install
+npm run build:standalone     # → dist/standalone.html
+```
+
+`dist/standalone.html` is the entire game in one 294 KB file. Put it anywhere — a
+phone's Downloads folder, a USB stick, an email attachment — and open it in a
+browser. It runs offline and saves your progress.
+
+**Permanent URL:** <https://doobiedobo.github.io/Counting-Calories/> — rebuilds on
+every push, but needs two one-time settings: the repository set to **public**
+(Pages on a private repo requires a paid plan) and Settings → Pages → Source set to
+**GitHub Actions**. Until both are done, this link 404s.
+
+**Locally, for development:**
+
+```sh
 npm run dev
 ```
+
+> There's also a short explainer page at
+> [claude.ai/code/artifact/bc528df3…](https://claude.ai/code/artifact/bc528df3-e281-4bed-908a-f4eb35d599dc)
+> describing the game and these routes. It is *not* the game — that host truncates
+> page content at roughly 36 KB, and the game is eight times that, so a published
+> build renders blank.
 
 ---
 
