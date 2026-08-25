@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getDish } from '../data/dishes'
+import { dishesForMenu, getDish } from '../data/dishes'
 import { CATALOG } from '../data/products'
 import { buildCart, cartTotals } from '../engine/cart'
 import type { Profile } from '../engine/calories'
@@ -10,8 +10,10 @@ import {
   initialState,
   mealPot,
   pickerFor,
+  picksBefore,
   soleMenuFor,
   tableConcerns,
+  turnsPerPlayer,
   type Action,
   type GameState,
 } from './gameReducer'
@@ -337,6 +339,87 @@ describe('dietary concerns across the table', () => {
       { type: 'ADD_PLAYER', profile: legacy },
     ])
     expect(tableConcerns(state.players)).toEqual([])
+  })
+})
+
+describe('everyone gets a fair share of the turns', () => {
+  const MAX_PLAYERS = 6
+
+  it('deals a round-robin evenly, earlier seats taking the remainder', () => {
+    expect(turnsPerPlayer(12, 6)).toEqual([2, 2, 2, 2, 2, 2])
+    expect(turnsPerPlayer(19, 6)).toEqual([4, 3, 3, 3, 3, 3])
+    expect(turnsPerPlayer(5, 6)).toEqual([1, 1, 1, 1, 1, 0])
+    expect(turnsPerPlayer(0, 3)).toEqual([0, 0, 0])
+    expect(turnsPerPlayer(7, 0)).toEqual([])
+  })
+
+  it('never leaves one seat more than a single turn behind another', () => {
+    for (let players = 2; players <= MAX_PLAYERS; players++) {
+      for (let picks = 0; picks < 60; picks++) {
+        const turns = turnsPerPlayer(picks, players)
+        expect(Math.max(...turns) - Math.min(...turns), `${picks}/${players}`).toBeLessThanOrEqual(1)
+        expect(turns.reduce((a, b) => a + b, 0), `${picks}/${players}`).toBe(picks)
+      }
+    }
+  })
+
+  /**
+   * The requirement, stated over the real data rather than a chosen example.
+   *
+   * Six players cannot each get two turns inside a single meal — the largest
+   * dish has eight ingredient slots and that needs twelve — so this is a
+   * property of a whole run, and it only holds because the rotation carries
+   * across meals rather than restarting at seat one.
+   */
+  it('gives every player at least two turns over any possible run', () => {
+    const breakfast = dishesForMenu('breakfast')
+    const rest = (['filipino', 'american', 'arabic', 'chinese'] as const).flatMap((m) =>
+      dishesForMenu(m),
+    )
+
+    let worst = Infinity
+    let worstCase = ''
+
+    for (let players = 2; players <= MAX_PLAYERS; players++) {
+      for (const b of breakfast) {
+        for (const lunch of rest) {
+          for (const dinner of rest) {
+            const picks = b.slots.length + lunch.slots.length + dinner.slots.length
+            const least = Math.min(...turnsPerPlayer(picks, players))
+            if (least < worst) {
+              worst = least
+              worstCase = `${players} players · ${b.id} + ${lunch.id} + ${dinner.id} = ${picks} picks`
+            }
+          }
+        }
+      }
+    }
+
+    expect(worst, `worst case was ${worstCase}`).toBeGreaterThanOrEqual(2)
+  })
+
+  it('carries the rotation across meals instead of restarting at seat one', () => {
+    let state = coopStart()
+    state = gameReducer(state, { type: 'CHOOSE_DISH', dishId: 'tapsilog' })
+    const dish = getDish('tapsilog')!
+    state = shopCheaply(state)
+    state = gameReducer(state, { type: 'CHECKOUT' })
+    state = gameReducer(state, { type: 'NEXT_MEAL' })
+    state = gameReducer(state, { type: 'CHOOSE_DISH', dishId: 'adobo' })
+
+    // Two players and a six-slot breakfast: the next meal must resume where the
+    // rotation left off, not hand seat one the first pick again.
+    expect(picksBefore(state)).toBe(dish.slots.length)
+    expect(pickerFor(state)?.id).toBe(state.players[dish.slots.length % 2]!.id)
+  })
+
+  it('shows the same picker when you go back to change an earlier ingredient', () => {
+    let state = gameReducer(coopStart(), { type: 'CHOOSE_DISH', dishId: 'tapsilog' })
+    state = gameReducer(state, { type: 'GOTO_INGREDIENT', index: 3 })
+    const first = pickerFor(state)?.id
+    state = gameReducer(state, { type: 'GOTO_INGREDIENT', index: 0 })
+    state = gameReducer(state, { type: 'GOTO_INGREDIENT', index: 3 })
+    expect(pickerFor(state)?.id).toBe(first)
   })
 })
 

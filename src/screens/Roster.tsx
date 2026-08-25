@@ -3,7 +3,7 @@ import { RUN_MEALS, dayTarget, mealPot } from '../state/gameReducer'
 import { MEAL_LABELS } from '../engine/calories'
 import { useGame } from '../state/GameContext'
 
-const MAX_PLAYERS = 4
+export const MAX_PLAYERS = 6
 
 /** Co-op lobby: who is playing, and what the pooled budget comes to. */
 export function Roster() {
@@ -52,7 +52,7 @@ export function Roster() {
           disabled={full}
           onClick={() => dispatch({ type: 'GOTO', phase: 'profile' })}
         >
-          {full ? 'Table is full (4)' : 'Add another player'}
+          {full ? `Table is full (${MAX_PLAYERS})` : 'Add another player'}
         </button>
         <button
           type="button"

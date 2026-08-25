@@ -185,7 +185,41 @@ function phaseForMeal(meal: CurrentMeal): Phase {
  */
 export function pickerFor(state: GameState): Player | null {
   if (state.mode !== 'coop' || state.players.length === 0 || !state.current) return null
-  return state.players[state.current.slotIndex % state.players.length] ?? null
+  const turn = picksBefore(state) + state.current.slotIndex
+  return state.players[turn % state.players.length] ?? null
+}
+
+/**
+ * Ingredient decisions made in meals already finished this run.
+ *
+ * Derived from history rather than counted into state, so there is nothing to
+ * migrate, nothing to fall out of sync, and revisiting an earlier ingredient
+ * shows the same picker it showed the first time.
+ */
+export function picksBefore(state: GameState): number {
+  return state.history.reduce((sum, meal) => sum + (getDish(meal.dishId)?.slots.length ?? 0), 0)
+}
+
+/**
+ * How many turns each seat gets when `totalPicks` decisions are dealt
+ * round-robin, seat 0 first.
+ *
+ * Exists so the fairness guarantee can be tested directly. Six players cannot
+ * each get two turns inside one meal — the largest dish has eight ingredient
+ * slots and that would need twelve — so the guarantee is a property of a whole
+ * three-meal run, which is only true because the rotation carries across meals.
+ */
+export function turnsPerPlayer(totalPicks: number, playerCount: number): number[] {
+  if (playerCount <= 0) return []
+  const base = Math.floor(totalPicks / playerCount)
+  const remainder = totalPicks % playerCount
+  return Array.from({ length: playerCount }, (_, seat) => base + (seat < remainder ? 1 : 0))
+}
+
+/** Turns taken so far this run, per seat — shown on the chips in the store. */
+export function turnsSoFar(state: GameState): number[] {
+  const done = picksBefore(state) + (state.current?.slotIndex ?? 0)
+  return turnsPerPlayer(done, state.players.length)
 }
 
 export function gameReducer(state: GameState, action: Action): GameState {

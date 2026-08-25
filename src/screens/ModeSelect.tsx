@@ -33,8 +33,8 @@ export function ModeSelect() {
           </span>
           <h2>Together</h2>
           <p className="lede">
-            Two to four of you on one screen. Your budgets go into one pot and you cook one
-            meal — so every ingredient has to be argued for out loud.
+            Two to six of you on one screen. Your budgets go into one pot and you cook a
+            portion each — so every ingredient has to be argued for out loud.
           </p>
           <span className="mode-tag">Pass the device around</span>
         </button>

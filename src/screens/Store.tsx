@@ -9,7 +9,8 @@ import { CATALOG } from '../data/products'
 import { buildCart, cartTotals, formatQty, optionKcal } from '../engine/cart'
 import { pick } from '../engine/random'
 import { flagsFor } from '../data/dietary'
-import { pickerFor, tableConcerns } from '../state/gameReducer'
+import { pickerFor, tableConcerns, turnsSoFar } from '../state/gameReducer'
+import { PlayerChips } from '../components/PlayerChips'
 import { useGame } from '../state/GameContext'
 import { seatColor } from '../components/PlayerChips'
 
@@ -91,13 +92,16 @@ export function Store() {
       />
 
       {picker && !voting && (
-        <div className="picker-banner" style={{ '--seat': seatColor(pickerIndex) } as React.CSSProperties}>
-          <span className="player-chip-dot" aria-hidden="true" />
-          <span>
-            <strong>{picker.profile.name}</strong> is picking this one. Everyone gets a say —
-            only they get to tap.
-          </span>
-        </div>
+        <>
+          <div className="picker-banner" style={{ '--seat': seatColor(pickerIndex) } as React.CSSProperties}>
+            <span className="player-chip-dot" aria-hidden="true" />
+            <span>
+              <strong>{picker.profile.name}</strong> is picking this one. Everyone gets a say —
+              only they get to tap.
+            </span>
+          </div>
+          <PlayerChips players={state.players} activeId={picker.id} turns={turnsSoFar(state)} />
+        </>
       )}
 
       {voting ? (
