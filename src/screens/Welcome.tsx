@@ -22,6 +22,21 @@ export function Welcome() {
         </p>
       </div>
 
+      <div className="btn-row">
+        <button type="button" className="btn" onClick={() => dispatch({ type: 'GOTO', phase: 'mode' })}>
+          Start shopping
+        </button>
+        {saved > 0 && (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => dispatch({ type: 'GOTO', phase: 'saved' })}
+          >
+            Saved rounds ({saved})
+          </button>
+        )}
+      </div>
+
       <div className="welcome-steps">
         <div className="welcome-step card">
           <span className="welcome-step-num">1</span>
@@ -38,21 +53,6 @@ export function Welcome() {
           <h3>Go shopping</h3>
           <p className="lede">Five menus, thirty-nine dishes, and a checkout that says no.</p>
         </div>
-      </div>
-
-      <div className="btn-row">
-        <button type="button" className="btn" onClick={() => dispatch({ type: 'GOTO', phase: 'mode' })}>
-          Start shopping
-        </button>
-        {saved > 0 && (
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => dispatch({ type: 'GOTO', phase: 'saved' })}
-          >
-            Saved rounds ({saved})
-          </button>
-        )}
       </div>
 
       <p className="disclaimer">

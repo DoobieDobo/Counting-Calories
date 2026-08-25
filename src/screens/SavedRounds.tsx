@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { shoppingList } from '../engine/shopping'
-import { PLAN_DAYS, portionWeights } from '../state/gameReducer'
+import { SavedRoundCard, roundDate } from '../components/SavedRoundCard'
+import { PLAN_DAYS } from '../state/gameReducer'
 import { useGame } from '../state/GameContext'
 import { deleteRound, loadRounds, type SavedRound } from '../state/rounds'
 import { PlanReport } from './PlanReport'
@@ -50,42 +50,16 @@ export function SavedRounds() {
 
       {rounds.length > 0 && (
         <ul className="saved-list">
-          {rounds.map((round) => {
-            const kcal = round.days.reduce((sum, d) => sum + d.verdict.kcal, 0)
-            const items = shoppingList(round.days, portionWeights(round.players)).length
-            return (
-              <li key={round.id} className="card saved-round">
-                <button
-                  type="button"
-                  className="saved-round-open"
-                  onClick={() => setOpenId(round.id)}
-                >
-                  <span className="saved-round-when">{fullDate(round.finishedAt)}</span>
-                  <span className="saved-round-dishes">
-                    {round.days
-                      .flatMap((d) => d.meals.map((m) => m.dishEmoji))
-                      .join(' ')}
-                  </span>
-                  <span className="lede saved-round-meta">
-                    {round.days.length} days · {items} things to buy ·{' '}
-                    <span className="num">{kcal.toLocaleString()}</span> cal ·{' '}
-                    {round.players.map((p) => p.profile.name).join(', ')}
-                  </span>
-                  <span className="saved-round-grades">
-                    {round.days.map((d, i) => (
-                      <span
-                        key={i}
-                        className={`day-meal-grade grade-${d.verdict.grade.toLowerCase()}`}
-                      >
-                        {d.verdict.grade}
-                      </span>
-                    ))}
-                  </span>
-                </button>
-                <DeleteRound name={fullDate(round.finishedAt)} onDelete={() => remove(round.id)} />
-              </li>
-            )
-          })}
+          {rounds.map((round) => (
+            <li key={round.id}>
+              <SavedRoundCard round={round} onOpen={() => setOpenId(round.id)}>
+                <DeleteRound
+                  name={roundDate(round.finishedAt)}
+                  onDelete={() => remove(round.id)}
+                />
+              </SavedRoundCard>
+            </li>
+          ))}
         </ul>
       )}
 
@@ -125,12 +99,4 @@ function DeleteRound({ name, onDelete }: { name: string; onDelete: () => void })
       Delete
     </button>
   )
-}
-
-function fullDate(at: number): string {
-  return new Date(at).toLocaleDateString(undefined, {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  })
 }

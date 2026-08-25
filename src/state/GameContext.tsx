@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useReducer, type ReactNode } from
 import { gameReducer, type Action, type GameState } from './gameReducer'
 import { initialGameState, save } from './persistence'
 import { saveRound } from './rounds'
+import { touchLastPlayed } from './session'
 
 interface GameContextValue {
   state: GameState
@@ -15,6 +16,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     save(state)
+  }, [state])
+
+  /**
+   * Remember when they were last here, so a return after a break can be met
+   * with a landing screen rather than a shelf. Read once at import in
+   * `session.ts`, so stamping it on every change cannot race the reading.
+   */
+  useEffect(() => {
+    touchLastPlayed()
   }, [state])
 
   /**

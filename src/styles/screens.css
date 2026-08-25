@@ -1547,3 +1547,36 @@
     grid-template-columns: 72px 1fr auto;
   }
 }
+
+/* ── Coming back ───────────────────────────────────────────────────────── */
+
+.resume {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.resume h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.resume-meal {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.resume .btn-row {
+  margin-top: 10px;
+}
+
+/*
+ * The two buttons now sit between the pitch and the three explainer cards,
+ * rather than under them: on a phone they were at roughly y845, which is below
+ * the fold once the address bar is counted, so a returning player had to scroll
+ * past the whole how-it-works section to find their saved rounds.
+ */
+.screen-welcome .btn-row {
+  margin-bottom: 4px;
+}
