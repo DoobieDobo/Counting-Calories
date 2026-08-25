@@ -972,17 +972,8 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.94rem;
-  /*
-   * Each aisle is its own table, so without a fixed layout every one of them
-   * sizes its columns to its own longest "for …" line and the numbers land in a
-   * different place in each block. Pinning the item column makes the whole list
-   * read as one table down the page.
-   */
+  /* Widths come from the colgroup the screen builds — see tableColumns(). */
   table-layout: fixed;
-}
-
-.aisle-table th:first-child {
-  width: 36%;
 }
 
 .aisle-table th,
@@ -1023,13 +1014,15 @@
   border-top: 1px solid var(--border);
 }
 
-.aisle-share-head,
-.aisle-total-head {
-  text-align: right;
-}
-
-.aisle-share,
-.aisle-total {
+/*
+ * Scoped through .aisle-table so these beat the `.aisle-table th, td` rule
+ * above them, which is one specificity point heavier than a bare class and was
+ * quietly left-aligning every number in the table.
+ */
+.aisle-table .aisle-share-head,
+.aisle-table .aisle-total-head,
+.aisle-table .aisle-share,
+.aisle-table .aisle-total {
   text-align: right;
   white-space: nowrap;
 }
@@ -1038,20 +1031,41 @@
   color: var(--text-muted);
 }
 
-/* The column you actually shop from, so it reads first. */
+/*
+ * The number you shop from, so it sits right beside the ingredient and the
+ * per-person columns open out to its right.
+ */
 .aisle-total-head,
 .aisle-total {
+  padding-right: 14px;
+  color: var(--text);
+}
+
+.aisle-table thead .aisle-share-head:first-of-type,
+.aisle-table tbody .aisle-share:first-of-type {
   padding-left: 14px;
   border-left: 1px solid var(--border);
 }
 
-/*
- * Pinned, because it is the only numeric column carrying a unit and "48 pieces"
- * needs more room than "48". Under a fixed layout the share columns divide
- * whatever is left, which is what should give when the table gets crowded.
- */
-.aisle-total-head {
-  width: 96px;
+
+/* Opening the per-person breakdown. */
+
+.shares-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: -4px;
+}
+
+.shares-toggle .btn {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.shares-note {
+  margin: 0;
+  font-size: 0.88rem;
 }
 
 .aisle-line-kcal {

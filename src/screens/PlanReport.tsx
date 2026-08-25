@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { MacroBar } from '../components/MacroBar'
 import { getDish } from '../data/dishes'
 import { CATALOG } from '../data/products'
@@ -24,11 +25,17 @@ import { clear } from '../state/persistence'
  */
 export function PlanReport() {
   const { state, dispatch } = useGame()
+  // Collapsed by default: the list is for shopping, and shopping wants one
+  // number per ingredient. Whose share is whose only matters at the stove.
+  // Declared before the early return — a hook cannot run conditionally.
+  const [showShares, setShowShares] = useState(false)
+
   const days = state.days
   if (days.length === 0) return null
 
   // A solo shopper has nothing to divide, so they keep the plain list.
   const split = state.players.length > 1
+  const columns = tableColumns(state.players.length, showShares)
   const aisles = shoppingByAisle(days, split ? portionWeights(state.players) : [])
   const listTotal = shoppingTotal(days)
   const concerns = tableConcerns(state.players)
@@ -130,16 +137,31 @@ export function PlanReport() {
         <p className="lede">
           Everything those meals needed, added up and sorted by aisle. Quantities are already
           scaled to {servings} {servings === 1 ? 'serving' : 'servings'} a meal.
-          {split && (
-            <>
-              {' '}
-              Buy the <strong>Total</strong> column — that's one shop for everyone. The columns
-              before it are each person's share of it, in proportion to their own target, for when
-              it comes time to put food on plates.
-            </>
-          )}
+          {split && " The Total column is what you buy — one shop for everyone."}
         </p>
 
+        {split && (
+          <div className="shares-toggle">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              aria-expanded={showShares}
+              aria-controls="shopping-aisles"
+              onClick={() => setShowShares((on) => !on)}
+            >
+              {showShares ? '▾' : '▸'} Each person's share
+            </button>
+            {showShares && (
+              <p className="lede shares-note">
+                Split by each player's own calorie target, the same way the game dishes out a
+                cooked meal — not by headcount. For serving up, not for shopping: the Total is
+                still the number you buy.
+              </p>
+            )}
+          </div>
+        )}
+
+        <div id="shopping-aisles">
         {aisles.map((aisle) =>
           split ? (
             <div key={aisle.category} className="aisle">
@@ -149,17 +171,34 @@ export function PlanReport() {
               </h3>
               <div className="aisle-table-wrap">
                 <table className="aisle-table">
+                  {/*
+                    Explicit widths, because the layout is fixed and every aisle
+                    is its own table: without them each one sizes to its own
+                    longest ingredient line and the numbers land somewhere
+                    different in every block. They also have to add to 100 in
+                    both states, or collapsing leaves a band of dead space
+                    where the per-person columns used to be.
+                  */}
+                  <colgroup>
+                    <col style={{ width: `${columns.item}%` }} />
+                    <col style={{ width: `${columns.total}%` }} />
+                    {showShares &&
+                      state.players.map((p) => (
+                        <col key={p.id} style={{ width: `${columns.share}%` }} />
+                      ))}
+                  </colgroup>
                   <thead>
                     <tr>
                       <th scope="col">Item</th>
-                      {state.players.map((p) => (
-                        <th key={p.id} scope="col" className="aisle-share-head">
-                          {p.profile.name}
-                        </th>
-                      ))}
                       <th scope="col" className="aisle-total-head">
                         Total
                       </th>
+                      {showShares &&
+                        state.players.map((p) => (
+                          <th key={p.id} scope="col" className="aisle-share-head">
+                            {p.profile.name}
+                          </th>
+                        ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -183,14 +222,15 @@ export function PlanReport() {
                             </span>
                           </span>
                         </th>
-                        {line.perPlayer.map((share, i) => (
-                          <td key={state.players[i]?.id ?? i} className="num aisle-share">
-                            {formatShare(share)}
-                          </td>
-                        ))}
                         <td className="num aisle-total">
                           <strong>{formatAmount(line)}</strong>
                         </td>
+                        {showShares &&
+                          line.perPlayer.map((share, i) => (
+                            <td key={state.players[i]?.id ?? i} className="num aisle-share">
+                              {formatShare(share)}
+                            </td>
+                          ))}
                       </tr>
                     ))}
                   </tbody>
@@ -221,6 +261,7 @@ export function PlanReport() {
             </div>
           ),
         )}
+        </div>
 
         <p className="lede">
           <strong className="num">{listTotal.toLocaleString()}</strong> calories on the list —
@@ -294,6 +335,24 @@ export function PlanReport() {
       </div>
     </div>
   )
+}
+
+/**
+ * Column widths for the shopping table, as percentages that always sum to 100.
+ *
+ * A share column is capped so that a table of two doesn't end up with two
+ * enormous columns and a squeezed ingredient name; past four players the cap
+ * stops biting and they divide what is left of the row.
+ */
+function tableColumns(players: number, showShares: boolean): {
+  item: number
+  total: number
+  share: number
+} {
+  if (!showShares || players === 0) return { item: 74, total: 26, share: 0 }
+
+  const share = Math.min(18, 52 / players)
+  return { item: 100 - 12 - share * players, total: 12, share }
 }
 
 /**
