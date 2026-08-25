@@ -1,0 +1,71 @@
+name: Deploy to GitHub Pages
+
+# Publishes the built game to GitHub Pages.
+#
+# DEPLOYS FROM `main` ONLY, and that is not a preference. Switching Pages on
+# creates a `github-pages` environment whose deployment-branch policy admits the
+# default branch and nothing else, so the deploy job on any other branch is
+# refused before it starts — it reports failure in about two seconds with no
+# steps and no log to download, which reads like a broken runner and is not one.
+#
+# Learned the hard way: a build from a feature branch went fully green, uploaded
+# its artifact, and was then thrown out at the last step, while a workflow run
+# from `main` ten minutes later deployed without complaint.
+#
+# So develop on the working branch, merge to `main`, and the merge publishes.
+# Widening the policy (Settings → Environments → github-pages → Deployment
+# branches) would also work, but the default branch is the ordinary place for
+# this and needs no setting anybody has to remember.
+#
+# Pages itself is already switched on (Settings → Pages → Source: GitHub
+# Actions). It cannot be switched on from here: `enablement: true` on
+# configure-pages needs admin rights the default GITHUB_TOKEN is not granted,
+# and fails with "Resource not accessible by integration".
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          # Sets the asset base path to /Counting-Calories/ for project-site hosting.
+          GITHUB_PAGES: 'true'
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

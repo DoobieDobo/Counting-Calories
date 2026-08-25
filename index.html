@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="A grocery shopping game where calories are the currency." />
+    <meta name="theme-color" content="#12100e" />
+    <title>Counting Calories</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>" />
+    <script>
+      /*
+       * Applied before the first paint. React mounts far too late to prevent a
+       * flash of the wrong theme for anyone whose choice differs from their
+       * phone's — which is precisely the person who set one.
+       *
+       * The key is duplicated from src/state/theme.ts; change both together.
+       */
+      try {
+        var pref = localStorage.getItem('counting-calories:theme:v1')
+        if (pref === 'dark' || pref === 'light') document.documentElement.dataset.theme = pref
+      } catch (e) {
+        /* Storage off: fall through to following the OS. */
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

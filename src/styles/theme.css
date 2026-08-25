@@ -1,0 +1,299 @@
+/*
+ * Design tokens and the handful of global rules everything else builds on.
+ *
+ * The look is a bright grocery aisle: warm paper, produce green, and a receipt
+ * red for going over budget. Dark mode is the same shop after closing time.
+ */
+
+:root {
+  /* Follow the OS unless a [data-theme] rule below pins the scheme. */
+  color-scheme: light dark;
+
+  /*
+   * Plain light values first, so a browser without `light-dark()` still gets a
+   * complete, readable palette instead of unstyled text. The second declaration
+   * of each token wins everywhere that supports it.
+   */
+  --bg: #fdf8f0;
+  --bg-sunken: #f4ece0;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --border: #e4d9c8;
+  --border-strong: #cfc0a9;
+  --text: #241d14;
+  --text-muted: #6d6153;
+  --text-faint: #948877;
+  --accent: #1f7a4d;
+  --accent-soft: #e4f2ea;
+  --accent-text: #ffffff;
+  --warn: #b8730f;
+  --warn-soft: #fbf0dd;
+  --danger: #b8362f;
+  --danger-soft: #fbe6e4;
+  --protein: #3d7ea6;
+  --carbs: #c9902c;
+  --fat: #b8555f;
+  --shadow-near: rgb(36 29 20 / 6%);
+  --shadow-far: rgb(36 29 20 / 6%);
+  --shadow-near-lift: rgb(36 29 20 / 10%);
+  --shadow-far-lift: rgb(36 29 20 / 10%);
+
+  /* Warm paper and produce green by day; the same shop after closing by night. */
+  --bg: light-dark(#fdf8f0, #16130f);
+  --bg-sunken: light-dark(#f4ece0, #100e0b);
+  --surface: light-dark(#ffffff, #211d18);
+  --surface-raised: light-dark(#ffffff, #2a251e);
+  --border: light-dark(#e4d9c8, #362f26);
+  --border-strong: light-dark(#cfc0a9, #4b4133);
+
+  --text: light-dark(#241d14, #f2ebe0);
+  --text-muted: light-dark(#6d6153, #b0a493);
+  --text-faint: light-dark(#948877, #83786a);
+
+  --accent: light-dark(#1f7a4d, #4bbd84);
+  --accent-soft: light-dark(#e4f2ea, #1a3128);
+  --accent-text: light-dark(#ffffff, #08150e);
+
+  --warn: light-dark(#b8730f, #e0a341);
+  --warn-soft: light-dark(#fbf0dd, #2f2513);
+  --danger: light-dark(#b8362f, #ef7a72);
+  --danger-soft: light-dark(#fbe6e4, #331815);
+
+  --protein: light-dark(#3d7ea6, #6fb2d8);
+  --carbs: light-dark(#c9902c, #e0b45c);
+  --fat: light-dark(#b8555f, #e0868f);
+
+  --shadow-near: light-dark(rgb(36 29 20 / 6%), rgb(0 0 0 / 30%));
+  --shadow-far: light-dark(rgb(36 29 20 / 6%), rgb(0 0 0 / 25%));
+  --shadow-near-lift: light-dark(rgb(36 29 20 / 10%), rgb(0 0 0 / 35%));
+  --shadow-far-lift: light-dark(rgb(36 29 20 / 10%), rgb(0 0 0 / 30%));
+
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 1px 2px var(--shadow-near), 0 4px 14px var(--shadow-far);
+  --shadow-lift: 0 2px 6px var(--shadow-near-lift), 0 12px 28px var(--shadow-far-lift);
+
+  --font: ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Helvetica Neue', sans-serif;
+  --font-num: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+
+  --max-width: 940px;
+  --rail-width: 218px;
+}
+
+/*
+ * Dark mode has to cover three states, not two:
+ *
+ *   - no stamp on <html>   → "system": prefers-color-scheme decides
+ *   - data-theme="dark"    → explicitly chosen dark
+ *   - data-theme="light"   → explicitly chosen light, which must win even on
+ *                            a dark OS
+ *
+ * `light-dark()` handles all three from a single definition per token: the
+ * scheme is decided by `color-scheme`, which the two `[data-theme]` rules below
+ * pin. Every colour is therefore declared exactly once, and there is no second
+ * block to drift out of sync.
+ *
+ * Shadows aren't colours, so they're composed from colour tokens rather than
+ * being switched wholesale.
+ */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+h1 {
+  font-size: clamp(1.7rem, 5vw, 2.4rem);
+}
+
+h2 {
+  font-size: clamp(1.3rem, 3.6vw, 1.7rem);
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── The shell ─────────────────────────────────────────────────────────── */
+
+/*
+ * A rail beside the screen on a wide window, a sheet over it on a narrow one.
+ * `body` stays the scroll container either way — making `.app-main` scroll
+ * instead would break the store's sticky budget bar and the scroll-to-top on
+ * every phase change, neither of which is obvious until you play a round.
+ */
+.app-shell {
+  min-height: 100vh;
+}
+
+@media (min-width: 900px) {
+  .app-main {
+    padding-left: var(--rail-width);
+  }
+}
+
+/* ── Shared building blocks ────────────────────────────────────────────── */
+
+.screen {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 24px 20px 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.screen-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eyebrow {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.lede {
+  color: var(--text-muted);
+  max-width: 56ch;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 650;
+  font-size: 1rem;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.btn:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  filter: grayscale(0.3);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: transparent;
+  padding: 10px 14px;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg-sunken);
+  color: var(--text);
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
