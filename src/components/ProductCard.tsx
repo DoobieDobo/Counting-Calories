@@ -28,8 +28,13 @@ interface Props {
  * thing to know, but on the card it did the opposite of teaching it: three
  * numbers stacked together — pack, portion and price — and no way to tell which
  * one the calories belonged to. The portion is the one that costs you, so it is
- * the one that stays. `product.pack` is still on the data and still shown in
- * the vote panel.
+ * the one that stays. `product.pack` is still on every product, but nothing
+ * renders it now — the vote panel dropped it too.
+ *
+ * The name and the price share the top row. As a third grid column the price
+ * sat right at desktop width and, under the narrow-screen rule, below the
+ * macro bar and the tags — last on the card, on the only device this gets
+ * played on.
  */
 export function ProductCard({
   option,
@@ -63,10 +68,17 @@ export function ProductCard({
       </span>
 
       <span className="product-body">
-        <span className="product-name">{product.name}</span>
+        <span className="product-head">
+          <span className="product-name">{product.name}</span>
+          <span className="product-price">
+            <strong className="num">{nutrition.kcal.toLocaleString()}</strong>
+            <span className="product-price-unit">cal</span>
+            {unaffordable && <span className="product-over-flag">over budget</span>}
+          </span>
+        </span>
 
         <span className="product-use">
-          Uses {formatQty(option.use, servings)}
+          {formatQty(option.use, servings)}
           {servings > 1 && (
             <span className="product-scale">
               {' '}
@@ -87,12 +99,6 @@ export function ProductCard({
         </span>
 
         <DietBadge flags={flags} />
-      </span>
-
-      <span className="product-price">
-        <strong className="num">{nutrition.kcal.toLocaleString()}</strong>
-        <span className="product-price-unit">cal</span>
-        {unaffordable && <span className="product-over-flag">over budget</span>}
       </span>
     </button>
   )
