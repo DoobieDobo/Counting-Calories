@@ -158,8 +158,11 @@ much of that product it *uses*:
 opt('sauce-pinoy', g(180), 'the sweet red one')   // → 216 cal
 ```
 
-The store shows both numbers side by side, because the gap between them is the
-most useful thing the game has to teach.
+The store used to print both numbers on the card. It doesn't any more: "1 kg
+jar" stacked above "Uses 180 g" above "216 cal" left three numbers competing,
+and no way to tell which one the price belonged to. The portion is the one that
+costs you, so it's the one the card shows. The pack is still on the data, and
+still shown in the co-op vote panel where there's room for it.
 
 A consequence: a player's choice keys on the **option id**, not the product id.
 A slot routinely offers the same product at two portion sizes — one cup of rice

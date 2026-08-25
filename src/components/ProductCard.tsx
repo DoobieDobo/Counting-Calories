@@ -23,9 +23,13 @@ interface Props {
 /**
  * One item on the shelf.
  *
- * The card shows the pack as sold *and* the portion this dish uses. That gap —
- * a 1 kg jar of sauce, of which the dish takes 180 g — is the single most
- * useful thing the game has to teach, and it costs nothing to display.
+ * The card used to print the pack as sold ("1 kg jar") above the portion this
+ * dish uses ("Uses 180 g"). The gap between those two is a genuinely useful
+ * thing to know, but on the card it did the opposite of teaching it: three
+ * numbers stacked together — pack, portion and price — and no way to tell which
+ * one the calories belonged to. The portion is the one that costs you, so it is
+ * the one that stays. `product.pack` is still on the data and still shown in
+ * the vote panel.
  */
 export function ProductCard({
   option,
@@ -60,7 +64,6 @@ export function ProductCard({
 
       <span className="product-body">
         <span className="product-name">{product.name}</span>
-        <span className="product-pack">{product.pack}</span>
 
         <span className="product-use">
           Uses {formatQty(option.use, servings)}

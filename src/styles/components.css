@@ -383,11 +383,6 @@
   font-size: 1.02rem;
 }
 
-.product-pack {
-  font-size: 0.83rem;
-  color: var(--text-faint);
-}
-
 .product-use {
   font-size: 0.88rem;
   color: var(--text-muted);
