@@ -1580,3 +1580,10 @@
 .screen-welcome .btn-row {
   margin-bottom: 4px;
 }
+
+/* A setting's current state, beside its name. Quieter than a count badge. */
+.sidebar-value {
+  color: var(--text-faint);
+  font-size: 0.86rem;
+  font-weight: 600;
+}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { PLAN_DAYS } from '../state/gameReducer'
 import { useGame } from '../state/GameContext'
 import { clearRounds, loadRounds, subscribeRounds } from '../state/rounds'
+import { THEME_LABEL, loadTheme, nextTheme, setTheme } from '../state/theme'
 
 /** How far the sheet has to be dragged down before letting go dismisses it. */
 const CLOSE_AFTER = 72
@@ -17,6 +18,7 @@ export function Sidebar() {
   const { state, dispatch } = useGame()
   const [open, setOpen] = useState(false)
   const [asking, setAsking] = useState<string | null>(null)
+  const [theme, setThemeState] = useState(loadTheme)
 
   // Subscribed rather than polled on phase change: React runs this child's
   // effects before the provider's, so a round finished on this very render
@@ -89,6 +91,8 @@ export function Sidebar() {
     id: string
     label: string
     badge: number | null
+    /** Current setting, shown after the label rather than as a count. */
+    value?: string
     /** What to ask before doing it. Null for anything that destroys nothing. */
     confirm: string | null
     run: () => void
@@ -130,6 +134,20 @@ export function Sidebar() {
       // carried forward. START_RUN clears the block for exactly this reason.
       confirm: 'Changing the table starts the round again. Carry on?',
       run: () => dispatch({ type: 'GOTO', phase: 'roster' }),
+    },
+    {
+      id: 'theme',
+      label: 'Night mode',
+      badge: null,
+      value: THEME_LABEL[theme],
+      // Cycles rather than confirms: it changes nothing you could lose, and
+      // seeing the page change under you is the confirmation.
+      confirm: null,
+      run: () => {
+        const next = nextTheme(theme)
+        setTheme(next)
+        setThemeState(next)
+      },
     },
     savedCount > 0 && {
       id: 'wipe',
@@ -190,6 +208,7 @@ export function Sidebar() {
               >
                 {item.label}
                 {item.badge !== null && <span className="num sidebar-badge">{item.badge}</span>}
+                {item.value !== undefined && <span className="sidebar-value">{item.value}</span>}
               </button>
 
               {asking === item.id && item.confirm && (

@@ -49,10 +49,9 @@ export function App() {
     )
   }
 
-  // The landing page is its own full-width thing, and there is nothing to
-  // navigate away from yet.
-  if (state.phase === 'welcome') return <Welcome />
-
+  // The landing page goes through the shell too. It is a centred column like
+  // every other screen, and leaving it out put night mode out of reach on the
+  // first thing anyone sees.
   return (
     <div className="app-shell">
       <Sidebar />
@@ -87,6 +86,8 @@ function screenFor(phase: ReturnType<typeof useGame>['state']['phase']) {
       return <LiveReport />
     case 'saved':
       return <SavedRounds />
+    case 'welcome':
+      return <Welcome />
     default:
       return <Welcome />
   }
