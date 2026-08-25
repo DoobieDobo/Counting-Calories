@@ -30,14 +30,18 @@ npm install
 npm run build:standalone     # → dist/standalone.html
 ```
 
-`dist/standalone.html` is the entire game in one 294 KB file. Put it anywhere — a
+`dist/standalone.html` is the entire game in one 347 KB file. Put it anywhere — a
 phone's Downloads folder, a USB stick, an email attachment — and open it in a
 browser. It runs offline and saves your progress.
 
-**Permanent URL:** <https://doobiedobo.github.io/Counting-Calories/> — rebuilds on
-every push, but needs two one-time settings: the repository set to **public**
-(Pages on a private repo requires a paid plan) and Settings → Pages → Source set to
-**GitHub Actions**. Until both are done, this link 404s.
+**Permanent URL:** <https://doobiedobo.github.io/Counting-Calories/> — live, and
+rebuilt by `.github/workflows/deploy.yml` on every push to `main`.
+
+Deploys come from `main` alone. Turning Pages on creates a `github-pages`
+environment whose deployment-branch policy admits the default branch and nothing
+else, so a deploy job on any other branch is refused before it starts — two
+seconds, no steps, no log. Feature branches still get CI; they just do not
+publish.
 
 **Locally, for development:**
 
@@ -55,8 +59,13 @@ npm run dev
 
 ## Playing
 
-- **A run is one day** — breakfast, lunch, dinner. Each meal draws its share of
-  your daily budget, and anything you don't spend carries over to the next.
+- **A run is three days** — breakfast, lunch and dinner each day. Each meal draws
+  its share of that day's budget, and anything you don't spend carries over to
+  the next meal.
+- **Day three ends in a meal plan**, with a shopping list for the whole run:
+  every ingredient, totalled, with a per-player breakdown you can expand when
+  more than one of you is eating. Finished runs are kept — reach them from
+  ☰ Game menu → Saved rounds.
 - **Five menus**: Breakfast (Filipino silogs and American diner plates),
   Filipino, American, Arabic, Chinese. Thirty-nine dishes.
 - **Roll** if you don't want to choose — for the menu, the dish, or a single
@@ -65,8 +74,22 @@ npm run dev
   instructive move, so the game warns rather than blocks.
 - **Checkout refuses an over-budget cart**, but never just says no: it names the
   single biggest swap available and how much it saves.
-- **Co-op**, two to four players on one screen. Budgets pool into one pot, and
-  the picker rotates each ingredient — everyone discusses, one person commits.
+- **Tell it what to flag** — seventeen concerns, opt-in: gout (purines), halal,
+  vegetarian, vegan, caffeine, the major allergens (peanuts, tree nuts,
+  shellfish, fish, milk, egg, soy, gluten, sesame) and the intolerances
+  (lactose, fructose, FODMAPs). Turn any of them on and affected products carry
+  a tag on the shelf, in the vote panel and at checkout. It labels; it does not
+  hide.
+- **Night mode** is in ☰ Game menu, and follows the phone's own setting until you
+  say otherwise.
+- **Co-op**, two to six players on one screen. Budgets pool into one pot and
+  portions are shared out in proportion to each player's own target, so the
+  bigger eater gets the bigger plate. The picker rotates each ingredient —
+  everyone discusses, one person commits. The rotation carries *across* meals
+  rather than restarting, which is what makes the fairness guarantee hold: six
+  players cannot each get two turns inside one meal — the largest dish has eight
+  slots — but everyone gets at least two over a day, for every dish combination
+  the game can deal.
 
 ## Running it
 
@@ -92,12 +115,10 @@ npm run build:standalone
 ```
 
 The game makes no external requests — no CDN, no web fonts, no `fetch` — so it
-folds into one self-contained file. `scripts/inline-build.mjs` writes two:
-
-- `dist/standalone.html` — a complete document, ~294 KB. Open it straight from
-  disk, email it, drop it on any static host.
-- `dist/artifact.html` — the same thing without the `<!doctype>`/`<html>`/`<body>`
-  wrapper, for hosts that supply their own.
+folds into one self-contained file. `scripts/inline-build.mjs` writes
+`dist/standalone.html`: a complete document, ~347 KB. Open it straight from disk,
+email it, drop it on any static host. It runs offline and keeps your progress in
+the browser it was opened in.
 
 ## How it's put together
 
@@ -105,15 +126,22 @@ folds into one self-contained file. `scripts/inline-build.mjs` writes two:
 src/
 ├─ data/       the shelves and the recipes
 │  ├─ types.ts        Product / Slot / SlotOption / Dish
-│  ├─ products.ts     ~190 products, one shared catalogue
+│  ├─ products.ts     218 products, one shared catalogue
 │  ├─ menus.ts        the five menus, and which meals serve them
 │  └─ dishes/         one file per menu
 ├─ engine/     pure functions, no React
 │  ├─ calories.ts     BMR → TDEE → daily target → meal budgets
 │  ├─ cart.ts         option pricing, totals, affordability, swap hints
 │  ├─ nutrition.ts    macro split, meal and day grading, coaching lines
+│  ├─ shopping.ts     three days of meals → one aisle-sorted shopping list
+│  ├─ split.ts        largest-remainder apportionment, shared by cals and grams
+│  ├─ suggest.ts      what to try next, read off the run just played
 │  └─ random.ts       seeded RNG for rolls
 ├─ state/      one reducer for the whole game (solo is the 1-player case)
+│  ├─ persistence.ts  the run in progress
+│  ├─ rounds.ts       finished runs, on their own key so a bump cannot bin them
+│  ├─ session.ts      when you were last here, for the welcome-back screen
+│  └─ theme.ts        light / dark / system
 ├─ screens/    one component per phase
 └─ components/ budget bar, product card, macro bar, vote panel
 ```
@@ -180,8 +208,34 @@ Filipino-specific ones (longganisa, tapa, kesong puti, tablea, bagoong).
 Packaged goods use typical own-brand label values.
 
 The budget uses the Mifflin-St Jeor equation with the conventional activity
-multipliers, and ±500 kcal/day for a weight goal. It's clamped at 1200 (female)
-/ 1500 (male) so a weight-loss goal can never produce an unsafe target.
+multipliers. What the goal does to that number is deliberately *not* the
+conventional flat ±500.
+
+**The pace is sized to the person:** `min(500, 20% of maintenance)`. A flat 500 is
+19% of a 2,600-calorie day and 34% of a 1,450-calorie one — the same subtraction
+means something very different depending on whose body it lands on, and the flat
+version pushed roughly half of sedentary players wanting to lose weight straight
+through the safety floor. So a 2,600-calorie day still gets the full 500, and a
+1,450-calorie one gets 290.
+
+**The floor knows which way is dangerous.** `CALORIE_FLOOR` is 1,200 (female) /
+1,500 (male), but the guard applied depends on where the player's BMI sits:
+
+- **Underweight** — the floor can only push the target *up*. A weight-loss goal
+  from here is never given a deficit, and the game says why.
+- **Anywhere else** — the floor can only push the target *down* to maintenance,
+  never above it. Someone whose maintenance is genuinely below 1,200 and who asks
+  to maintain gets their maintenance, not 1,200. The old clamp handed them a
+  surplus from the guard that exists to prevent bad advice.
+
+So a target below 1,200 is possible, and when it happens it is the honest answer
+rather than a failure of the clamp. What the game will not do is turn a request
+to lose or maintain into a gain.
+
+Where the goal *was* eased — by the floor or by the 20% cap — the budget screen
+says so in plain words rather than quietly serving a different plan: that you may
+already be at a healthy weight, that losing more may not be wise, or that
+maintenance is already as low as the game will set a target.
 
 **This is a game, not medical advice.** It's built to make the cost of food
 choices *felt* — not to manage a health condition.
