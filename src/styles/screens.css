@@ -1238,22 +1238,39 @@
  * Bottom-right on purpose. Top-left would sit on the store's sticky budget
  * bar, which is the one thing on screen that must never be covered.
  */
+/*
+ * Labelled, not just a glyph. As a bare ☰ circle it was invisible enough that
+ * the first person to look for it assumed the menu must be a swipe.
+ */
 .sidebar-toggle {
   position: fixed;
   right: 16px;
   bottom: 16px;
-  width: 48px;
-  height: 48px;
+  height: 44px;
+  padding: 0 18px;
   display: none;
-  place-items: center;
+  align-items: center;
+  gap: 8px;
   border: 1px solid var(--border-strong);
   border-radius: 999px;
   background: var(--surface);
   color: var(--text);
-  font-size: 1.15rem;
+  font: inherit;
+  font-size: 0.94rem;
+  font-weight: 600;
   box-shadow: 0 4px 14px rgb(0 0 0 / 18%);
   cursor: pointer;
   z-index: 60;
+}
+
+/* The thing you grab to flick the sheet away. */
+.sidebar-grab {
+  display: none;
+  width: 36px;
+  height: 4px;
+  margin: -8px auto 0;
+  border-radius: 999px;
+  background: var(--border-strong);
 }
 
 .sidebar-scrim {
@@ -1265,10 +1282,19 @@
 
 @media (max-width: 899px) {
   .sidebar-toggle {
-    display: grid;
+    display: inline-flex;
+  }
+
+  .sidebar-grab {
+    display: block;
   }
 
   .sidebar {
+    /* A drag that runs past the top of the sheet must not scroll the page it
+       is covering. Nothing calls preventDefault — React's touch listeners are
+       passive — so the containment has to come from CSS. */
+    overscroll-behavior: contain;
+    touch-action: pan-y;
     inset: auto 0 0 0;
     width: auto;
     max-height: 70vh;
