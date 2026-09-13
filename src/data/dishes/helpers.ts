@@ -81,6 +81,7 @@ export function aromaticsSlot(): Slot {
     label: 'Aromatics',
     prompt: 'Building the base — what goes in first?',
     optional: true,
+    multi: true,
     options: [
       opt('onion', g(60), 'one small onion'),
       opt('garlic', g(15), 'three cloves'),

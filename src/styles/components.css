@@ -465,62 +465,146 @@
   opacity: 0.5;
 }
 
-/* ── Slot progress rail ────────────────────────────────────────────────── */
+/* ── Pot ───────────────────────────────────────────────────────────────── */
 
-.slot-progress {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.pot-stage {
+  position: relative;
+  width: min(360px, 90vw);
+  height: min(360px, 90vw);
+  margin: 8px auto 4px;
 }
 
-.slot-progress ol {
+.pot-center {
+  position: absolute;
+  inset: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
+  align-items: center;
+  justify-content: center;
+}
+
+.pot-emoji {
+  font-size: 3.2rem;
+  filter: drop-shadow(0 2px 6px var(--shadow-far));
+}
+
+.pot-ring {
+  position: absolute;
+  inset: 0;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.slot-pip {
-  width: 32px;
-  height: 32px;
+.pot-ring li {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88px;
+  height: 88px;
+  margin: -44px;
+  transform: rotate(calc(360deg / var(--n) * var(--i))) translate(min(155px, 40vw))
+    rotate(calc(-360deg / var(--n) * var(--i)));
+}
+
+.pot-token {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   border: 1.5px solid var(--border-strong);
   background: var(--surface);
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 700;
-  display: grid;
-  place-items: center;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 5px;
+  font-size: 0.7rem;
+  font-weight: 650;
+  line-height: 1.15;
+  text-align: center;
   transition: all 0.14s ease;
 }
 
-.slot-pip:disabled {
-  opacity: 0.4;
-}
-
-.slot-pip-done {
-  background: var(--accent);
+.pot-token:hover {
   border-color: var(--accent);
-  color: var(--accent-text);
 }
 
-.slot-pip-skipped {
+.pot-token-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.pot-token-done {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pot-token-skipped {
   background: var(--bg-sunken);
+  border-style: dashed;
   color: var(--text-faint);
 }
 
-.slot-pip-current {
-  border-color: var(--text);
-  border-width: 2.5px;
-  color: var(--text);
-  transform: scale(1.1);
+@media (max-width: 560px) {
+  .pot-stage {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 4px 0;
+  }
+
+  .pot-center {
+    position: static;
+    padding: 10px 0;
+  }
+
+  .pot-ring {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pot-ring li {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    transform: none;
+  }
+
+  .pot-token {
+    flex-direction: row;
+    justify-content: flex-start;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 0.94rem;
+    gap: 10px;
+    text-align: left;
+  }
+
+  .pot-token-emoji {
+    font-size: 1.5rem;
+  }
 }
 
-.slot-progress-caption {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+/* ── Ingredient card ───────────────────────────────────────────────────── */
+
+.ingredient-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ingredient-card-confirm {
+  margin-left: auto;
+}
+
+.ingredient-card-back {
+  align-self: flex-start;
+  padding-left: 0;
 }
 
 /* ── Roll button ───────────────────────────────────────────────────────── */

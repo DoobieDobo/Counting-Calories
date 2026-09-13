@@ -29,13 +29,29 @@ export interface CartTotals {
 }
 
 /**
- * A slot decision, keyed by slot id and holding the chosen *option* id.
+ * A slot decision, keyed by slot id and holding the chosen option id(s).
  *
- * `null` means the player deliberately skipped the ingredient; a missing key
- * means they haven't reached that slot yet. The distinction matters for the
- * "you skipped the protein" warning on the cart screen.
+ * Most slots hold a single option id. A `multi` slot holds an array, since
+ * more than one can be chosen at once. `null` means the player deliberately
+ * skipped the ingredient; a missing key means they haven't reached that slot
+ * yet. The distinction matters for the "you skipped the protein" warning on
+ * the cart screen — and an empty array from toggling every option back off
+ * reads the same as `null`, via `isSkipped` below.
  */
-export type Choices = Record<string, string | null>
+export type Choices = Record<string, string | string[] | null>
+
+/** Resolves a slot's decision to the option ids it actually selects, in order. */
+export function selectedOptionIds(choices: Choices, slotId: string): string[] {
+  const value = choices[slotId]
+  if (value === null || value === undefined) return []
+  return Array.isArray(value) ? value : [value]
+}
+
+/** True when a decided slot amounts to "nothing" — an explicit skip either way. */
+export function isSkipped(choices: Choices, slotId: string): boolean {
+  const value = choices[slotId]
+  return value === null || (Array.isArray(value) && value.length === 0)
+}
 
 /**
  * Fraction of a product's basis amount that a slot option uses.
@@ -88,24 +104,23 @@ export function buildCart(
   const lines: CartLine[] = []
 
   for (const slot of dish.slots) {
-    const optionId = choices[slot.id]
-    if (!optionId) continue // undefined (not reached) or null (skipped)
+    for (const optionId of selectedOptionIds(choices, slot.id)) {
+      const option = findOption(slot, optionId)
+      const product = option ? catalog[option.productId] : undefined
+      if (!option || !product) continue
 
-    const option = findOption(slot, optionId)
-    const product = option ? catalog[option.productId] : undefined
-    if (!option || !product) continue
-
-    const n = optionNutrition(product, option.use, servings)
-    lines.push({
-      slotId: slot.id,
-      slotLabel: slot.label,
-      optionId: option.id,
-      product,
-      use: option.use,
-      servings,
-      ...(option.note === undefined ? {} : { note: option.note }),
-      ...n,
-    })
+      const n = optionNutrition(product, option.use, servings)
+      lines.push({
+        slotId: slot.id,
+        slotLabel: slot.label,
+        optionId: option.id,
+        product,
+        use: option.use,
+        servings,
+        ...(option.note === undefined ? {} : { note: option.note }),
+        ...n,
+      })
+    }
   }
 
   return lines
@@ -175,8 +190,13 @@ export function bestSwap(
   let best: SwapHint | null = null
 
   for (const slot of dish.slots) {
+    // A multi-select slot doesn't have one thing to swap for another — it has
+    // a set. Leaving one out is a real move, but that's a different action
+    // from a swap, and the player can already do it from the ingredient card.
+    if (slot.multi) continue
+
     const chosenId = choices[slot.id]
-    if (!chosenId) continue
+    if (!chosenId || Array.isArray(chosenId)) continue
 
     const chosenOption = findOption(slot, chosenId)
     const chosenProduct = chosenOption ? catalog[chosenOption.productId] : undefined
@@ -237,6 +257,9 @@ export function priciestBuild(
         return product ? optionKcal(product, o.use, servings) : 0
       })
       .filter((c) => Number.isFinite(c))
-    return costs.length === 0 ? sum : sum + Math.max(...costs)
+    if (costs.length === 0) return sum
+    // A multi-select slot's ceiling is everything toggled on at once, not the
+    // single priciest option — nothing stops a player from taking all of them.
+    return sum + (slot.multi ? costs.reduce((a, b) => a + b, 0) : Math.max(...costs))
   }, 0)
 }

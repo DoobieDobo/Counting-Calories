@@ -16,8 +16,12 @@ import { RUN_MEALS, initialState, type GameState } from './gameReducer'
  * rehydrated with it undefined, every consumer took the `= 1` default, and the
  * bug that release had just fixed came silently back.
  */
-const KEY = 'counting-calories:run:v3'
-const RETIRED_KEYS = ['counting-calories:run:v1', 'counting-calories:run:v2']
+const KEY = 'counting-calories:run:v4'
+const RETIRED_KEYS = [
+  'counting-calories:run:v1',
+  'counting-calories:run:v2',
+  'counting-calories:run:v3',
+]
 
 export function save(state: GameState): void {
   try {
@@ -74,7 +78,8 @@ function isValid(value: unknown): value is GameState {
   // store, so treat it as unrecoverable rather than partly restoring it.
   if (s.current) {
     if (s.current.dishId && !getDish(s.current.dishId)) return false
-    if (typeof s.current.slotIndex !== 'number' || s.current.slotIndex < 0) return false
+    if (s.current.openSlotId !== null && typeof s.current.openSlotId !== 'string') return false
+    if (!Array.isArray(s.current.pickOrder)) return false
     if (typeof s.current.budget !== 'number') return false
     // Missing `servings` means a save from before recipes scaled to the table.
     // Resuming it would quietly restore the single-serving pricing bug.

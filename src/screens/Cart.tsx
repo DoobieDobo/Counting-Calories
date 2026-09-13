@@ -9,6 +9,7 @@ import {
   describeOption,
   findOption,
   formatQty,
+  isSkipped,
 } from '../engine/cart'
 import { macroSplit } from '../engine/nutrition'
 import { MEAL_LABELS } from '../engine/calories'
@@ -33,7 +34,7 @@ export function Cart() {
   const over = totals.kcal - current.budget
   const swap = affordable ? null : bestSwap(dish, current.choices, CATALOG, current.servings)
 
-  const skipped = dish.slots.filter((s) => current.choices[s.id] === null)
+  const skipped = dish.slots.filter((s) => isSkipped(current.choices, s.id))
   const skippedRequired = skipped.filter((s) => !s.optional)
 
   // Last chance to notice a flag before it's cooked.
@@ -67,16 +68,18 @@ export function Cart() {
       <div className="receipt card">
         <ul className="receipt-lines">
           {lines.map((line) => (
-            <li key={line.slotId} className={priciest?.slotId === line.slotId ? 'receipt-priciest' : ''}>
+            <li
+              key={`${line.slotId}-${line.optionId}`}
+              className={
+                priciest?.slotId === line.slotId && priciest?.optionId === line.optionId
+                  ? 'receipt-priciest'
+                  : ''
+              }
+            >
               <button
                 type="button"
                 className="receipt-line"
-                onClick={() =>
-                  dispatch({
-                    type: 'GOTO_INGREDIENT',
-                    index: dish.slots.findIndex((s) => s.id === line.slotId),
-                  })
-                }
+                onClick={() => dispatch({ type: 'OPEN_INGREDIENT', slotId: line.slotId })}
               >
                 <span className="receipt-emoji" aria-hidden="true">
                   {line.product.emoji}
@@ -98,12 +101,7 @@ export function Cart() {
               <button
                 type="button"
                 className="receipt-line"
-                onClick={() =>
-                  dispatch({
-                    type: 'GOTO_INGREDIENT',
-                    index: dish.slots.findIndex((s) => s.id === slot.id),
-                  })
-                }
+                onClick={() => dispatch({ type: 'OPEN_INGREDIENT', slotId: slot.id })}
               >
                 <span className="receipt-emoji" aria-hidden="true">
                   —
@@ -161,12 +159,7 @@ export function Cart() {
             type="button"
             className="btn btn-secondary"
             onClick={() =>
-              dispatch({
-                type: 'GOTO_INGREDIENT',
-                index: swap
-                  ? dish.slots.findIndex((s) => s.id === swap.slotId)
-                  : dish.slots.findIndex((s) => s.id === priciest?.slotId),
-              })
+              dispatch({ type: 'OPEN_INGREDIENT', slotId: swap ? swap.slotId : priciest?.slotId ?? null })
             }
           >
             Go and change it
@@ -183,16 +176,11 @@ export function Cart() {
           </strong>
           <ul className="flagged-list">
             {flaggedLines.map(({ line, flags }) => (
-              <li key={line.slotId}>
+              <li key={`${line.slotId}-${line.optionId}`}>
                 <button
                   type="button"
                   className="flagged-item"
-                  onClick={() =>
-                    dispatch({
-                      type: 'GOTO_INGREDIENT',
-                      index: dish.slots.findIndex((s) => s.id === line.slotId),
-                    })
-                  }
+                  onClick={() => dispatch({ type: 'OPEN_INGREDIENT', slotId: line.slotId })}
                 >
                   <span aria-hidden="true">{line.product.emoji}</span>
                   <span>
@@ -246,9 +234,9 @@ export function Cart() {
         <button
           type="button"
           className="btn btn-ghost"
-          onClick={() => dispatch({ type: 'GOTO_INGREDIENT', index: 0 })}
+          onClick={() => dispatch({ type: 'OPEN_INGREDIENT', slotId: null })}
         >
-          ← Back to the aisles
+          ← Back to the pot
         </button>
       </div>
     </div>

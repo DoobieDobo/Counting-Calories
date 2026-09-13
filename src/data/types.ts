@@ -93,6 +93,13 @@ export interface Slot {
    * is a legitimate (and instructive) move.
    */
   optional: boolean
+  /**
+   * Most slots are one option or none — a portion size, a cut of meat. A few are
+   * genuinely a set to combine (onion *and* garlic *and* ginger), not a choice
+   * between them. Those opt into `multi`, which lets the shelf toggle several
+   * options on at once instead of picking one and moving on.
+   */
+  multi?: boolean
   options: SlotOption[]
 }
 

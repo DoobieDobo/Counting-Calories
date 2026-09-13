@@ -7,10 +7,12 @@ import {
   cartTotals,
   cheapestBuild,
   formatQty,
+  isSkipped,
   optionKcal,
   optionNutrition,
   priciestBuild,
   portionRatio,
+  selectedOptionIds,
 } from './cart'
 
 const catalog: Record<string, Product> = {
@@ -188,6 +190,60 @@ describe('buildCart', () => {
   it('distinguishes two portions of the same product', () => {
     expect(cartTotals(buildCart(portionsDish, { pasta: 'pasta-white-60g' }, catalog)).kcal).toBe(95)
     expect(cartTotals(buildCart(portionsDish, { pasta: 'pasta-white-100g' }, catalog)).kcal).toBe(158)
+  })
+})
+
+/** A slot where more than one option can be chosen at once. */
+const multiDish: Dish = {
+  ...dish,
+  slots: [
+    {
+      id: 'extras',
+      label: 'Extras',
+      prompt: 'Anything else?',
+      optional: true,
+      multi: true,
+      options: [
+        { id: 'cheese-30g', productId: 'cheese', use: { amount: 30, unit: 'g' } },
+        {
+          id: 'pasta-white-60g',
+          productId: 'pasta-white',
+          use: { amount: 60, unit: 'g' },
+          note: 'a smaller serving',
+        },
+      ],
+    },
+  ],
+}
+
+describe('multi-select slots', () => {
+  it('resolves every selected option into its own cart line', () => {
+    const lines = buildCart(multiDish, { extras: ['cheese-30g', 'pasta-white-60g'] }, catalog)
+    expect(lines.map((l) => l.optionId).sort()).toEqual(['cheese-30g', 'pasta-white-60g'])
+    expect(cartTotals(lines).kcal).toBe(121 + 95)
+  })
+
+  it('treats an empty array as nothing chosen, same as an explicit skip', () => {
+    expect(buildCart(multiDish, { extras: [] }, catalog)).toHaveLength(0)
+    expect(isSkipped({ extras: [] }, 'extras')).toBe(true)
+    expect(isSkipped({ extras: null }, 'extras')).toBe(true)
+    // Not decided at all is a different thing from decided-as-nothing.
+    expect(isSkipped({}, 'extras')).toBe(false)
+  })
+
+  it('normalizes every shape a choice can take', () => {
+    expect(selectedOptionIds({ a: 'x' }, 'a')).toEqual(['x'])
+    expect(selectedOptionIds({ a: ['x', 'y'] }, 'a')).toEqual(['x', 'y'])
+    expect(selectedOptionIds({ a: null }, 'a')).toEqual([])
+    expect(selectedOptionIds({}, 'a')).toEqual([])
+  })
+
+  it('suggests no swap inside a multi-select slot — there is no single thing to swap', () => {
+    expect(bestSwap(multiDish, { extras: ['cheese-30g'] }, catalog)).toBeNull()
+  })
+
+  it('prices the priciest build as everything toggled on, not just the single costliest item', () => {
+    expect(priciestBuild(multiDish, catalog)).toBe(121 + 95)
   })
 })
 
