@@ -74,12 +74,13 @@ npm run dev
   instructive move, so the game warns rather than blocks.
 - **Checkout refuses an over-budget cart**, but never just says no: it names the
   single biggest swap available and how much it saves.
-- **Tell it what to flag** — seventeen concerns, opt-in: gout (purines), halal,
-  vegetarian, vegan, caffeine, the major allergens (peanuts, tree nuts,
-  shellfish, fish, milk, egg, soy, gluten, sesame) and the intolerances
-  (lactose, fructose, FODMAPs). Turn any of them on and affected products carry
-  a tag on the shelf, in the vote panel and at checkout. It labels; it does not
-  hide.
+- **Tell it what to flag** — 24 concerns, opt-in: five health conditions (gout,
+  diabetes, hypertension, cholesterol, kidney disease), two faith-based diets
+  (halal, kosher), the major allergens (peanuts, tree nuts, shellfish, fish,
+  milk, egg, soy, gluten, sesame), the intolerances (lactose, fructose,
+  caffeine, FODMAPs) and four diet styles (vegetarian, pescatarian, vegan,
+  keto). Turn any of them on and affected products carry a tag on the shelf, in
+  the vote panel and at checkout. It labels; it does not hide.
 - **Night mode** is in ☰ Game menu, and follows the phone's own setting until you
   say otherwise.
 - **Co-op**, two to six players on one screen. Budgets pool into one pot and

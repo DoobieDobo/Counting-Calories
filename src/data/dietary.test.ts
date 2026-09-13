@@ -239,6 +239,10 @@ describe('flagsFor', () => {
   it('leaves an unflagged product clean under every concern at once', () => {
     const everything = CONCERNS.map((c) => c.id)
     expect(flagsFor('tomato-fresh', everything)).toEqual([])
-    expect(flagsFor('rice-white', everything)).toEqual([])
+    expect(flagsFor('oil-olive', everything)).toEqual([])
+  })
+
+  it('gluten and FODMAP flag wheat, not rice', () => {
+    expect(flagsFor('rice-white', ['gluten', 'fodmap'])).toEqual([])
   })
 })

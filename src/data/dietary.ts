@@ -31,7 +31,12 @@ import { CATALOG } from './products'
 
 export type ConcernId =
   | 'gout'
+  | 'diabetes'
+  | 'hypertension'
+  | 'cholesterol'
+  | 'kidney'
   | 'halal'
+  | 'kosher'
   | 'peanut'
   | 'treenut'
   | 'shellfish'
@@ -46,7 +51,9 @@ export type ConcernId =
   | 'caffeine'
   | 'fodmap'
   | 'vegetarian'
+  | 'pescatarian'
   | 'vegan'
+  | 'keto'
 
 export type ConcernGroup = 'health' | 'faith' | 'allergy' | 'intolerance' | 'diet'
 
@@ -131,6 +138,95 @@ export const CONCERNS: readonly Concern[] = [
   },
 
   {
+    id: 'diabetes',
+    label: 'Diabetes',
+    group: 'health',
+    prompt: 'Flags what actually spikes blood sugar fast',
+    caveat:
+      'Food most likely to spike blood sugar quickly, not a low-carb diet — whole grains, legumes and whole fruit are not flagged.',
+    groups: [
+      {
+        level: 'avoid',
+        why: 'concentrated sugar — the fastest, biggest spike',
+        ids: ['cola', 'iced-tea', 'orange-juice', 'honey', 'maple-syrup', 'pancake-syrup', 'condensed-milk', 'sugar-white', 'sugar-brown'],
+      },
+      {
+        level: 'caution',
+        why: 'refined starch — high glycemic load with little fibre',
+        ids: ['rice-white', 'rice-glutinous', 'bread-white', 'burger-bun', 'pandesal', 'pita', 'tortilla-flour', 'cornflakes', 'french-fries', 'hash-brown', 'noodles-canton'],
+      },
+      {
+        level: 'caution',
+        why: 'sweetened sauce or condiment',
+        ids: ['ketchup', 'banana-ketchup', 'bbq-sauce', 'sweet-sour-sauce', 'hoisin', 'sauce-pinoy', 'pickle-relish'],
+      },
+    ],
+  },
+
+  {
+    id: 'hypertension',
+    label: 'Hypertension',
+    group: 'health',
+    prompt: 'Flags concentrated sodium',
+    caveat:
+      'Sodium content, not blood pressure medication interactions — check those with your doctor.',
+    groups: [
+      {
+        level: 'avoid',
+        why: 'concentrated sodium — cured, fermented or straight salt',
+        ids: ['salt', 'bagoong', 'fish-sauce', 'soy-sauce', 'oyster-sauce', 'bouillon-cube', 'gravy-mix', 'luncheon-meat', 'hotdog', 'bacon', 'tocino', 'longganisa', 'tuyo'],
+      },
+      {
+        level: 'caution',
+        why: 'salty cheese, condiment or dressing',
+        ids: ['parmesan', 'feta', 'kesong-puti', 'ketchup', 'banana-ketchup', 'mustard', 'ranch-dressing', 'caesar-dressing', 'caesar-dressing-light', 'buffalo-sauce', 'bbq-sauce', 'pickles', 'olives'],
+      },
+    ],
+  },
+
+  {
+    id: 'cholesterol',
+    label: 'Cholesterol',
+    group: 'health',
+    prompt: 'Flags concentrated saturated fat',
+    caveat:
+      'Saturated fat content only — it does not weigh dietary cholesterol itself, which current guidance treats as a smaller factor.',
+    groups: [
+      {
+        level: 'avoid',
+        why: 'concentrated saturated fat',
+        ids: ['lard', 'bacon', 'pork-belly', 'butter', 'cream-heavy', 'sour-cream', 'cream-cheese', 'hotdog', 'luncheon-meat', 'tocino', 'longganisa', 'french-fries', 'hash-brown'],
+      },
+      {
+        level: 'caution',
+        why: 'fattier cut, cheese, or cooked with saturated fat',
+        ids: ['ground-beef-regular', 'pork-shoulder', 'chicken-thigh', 'chicken-wings', 'chicken-drumstick', 'oil-coconut', 'coconut-milk', 'quickmelt', 'cheddar', 'mayonnaise'],
+      },
+    ],
+  },
+
+  {
+    id: 'kidney',
+    label: 'Kidney disease',
+    group: 'health',
+    prompt: 'Flags concentrated sodium, phosphorus and potassium',
+    caveat:
+      'A renal diet is stage-specific and needs a dietitian or nephrologist — this flags the usual culprits, not a plan tailored to your labs.',
+    groups: [
+      {
+        level: 'avoid',
+        why: 'sodium and phosphate additives — processed meat, cheese and cola',
+        ids: ['bouillon-cube', 'gravy-mix', 'luncheon-meat', 'hotdog', 'bacon', 'cola', 'cheese-slice'],
+      },
+      {
+        level: 'caution',
+        why: 'concentrated potassium',
+        ids: ['banana', 'banana-saba', 'potato', 'avocado', 'orange-juice', 'tomato-paste', 'tomato-sauce-can', 'tomato-canned', 'raisins', 'kalabasa'],
+      },
+    ],
+  },
+
+  {
     id: 'halal',
     label: 'Halal',
     group: 'faith',
@@ -138,6 +234,19 @@ export const CONCERNS: readonly Concern[] = [
     caveat:
       'Food that contains pork and alcohol. Does not guarantee actual certification.',
     groups: [{ level: 'avoid', why: 'pork', ids: PORK }],
+  },
+
+  {
+    id: 'kosher',
+    label: 'Kosher',
+    group: 'faith',
+    prompt: 'Flags pork and shellfish',
+    caveat:
+      'Food that contains pork or shellfish, read from the obvious ingredients only — not meat-and-dairy mixing, and not actual certification.',
+    groups: [
+      { level: 'avoid', why: 'pork', ids: PORK },
+      { level: 'avoid', why: 'shellfish', ids: SHELLFISH },
+    ],
   },
 
   // ── Allergies ────────────────────────────────────────────────────────────
@@ -304,6 +413,16 @@ export const CONCERNS: readonly Concern[] = [
     ],
   },
   {
+    id: 'pescatarian',
+    label: 'Pescatarian',
+    group: 'diet',
+    prompt: 'Fish is fine, other meat is not',
+    groups: [
+      { level: 'avoid', why: 'meat', ids: [...POULTRY, ...PORK, ...BEEF] },
+      { level: 'avoid', why: 'made with meat', ids: MEAT_EXTRACTS },
+    ],
+  },
+  {
     id: 'vegan',
     label: 'Vegan',
     group: 'diet',
@@ -315,6 +434,21 @@ export const CONCERNS: readonly Concern[] = [
       { level: 'avoid', why: 'dairy', ids: TRUE_DAIRY },
       { level: 'avoid', why: 'egg', ids: ['egg', 'egg-white', 'noodles-egg', 'mayonnaise', 'mayo-light'] },
       { level: 'avoid', why: 'from animals', ids: ['honey', 'yogurt-sauce', 'ranch-dressing'] },
+    ],
+  },
+  {
+    id: 'keto',
+    label: 'Keto',
+    group: 'diet',
+    prompt: 'Very low carb',
+    caveat:
+      'Flags the high-carb foods a strict low-carb diet cuts out — not a precise net-carb count.',
+    groups: [
+      { level: 'avoid', why: 'grain or flour', ids: [...WHEAT, 'rice-white', 'rice-brown', 'rice-glutinous', 'oats-rolled', 'oats-instant-sweet', 'cornflakes', 'pancake-mix', 'noodles-bihon', 'flour', 'cornstarch'] },
+      { level: 'avoid', why: 'sugar or syrup', ids: ['sugar-white', 'sugar-brown', 'honey', 'maple-syrup', 'pancake-syrup', 'condensed-milk', 'cola', 'iced-tea', 'orange-juice'] },
+      { level: 'avoid', why: 'high-carb legume', ids: ['chickpeas', 'chickpeas-dried', 'monggo', 'lentils', 'kidney-beans', 'hummus', 'falafel'] },
+      { level: 'caution', why: 'starchy vegetable or fruit', ids: ['potato', 'corn-kernels', 'kalabasa', 'gabi', 'banana', 'banana-saba', 'pineapple-chunks', 'raisins'] },
+      { level: 'caution', why: 'sweetened sauce', ids: ['ketchup', 'banana-ketchup', 'bbq-sauce', 'sweet-sour-sauce', 'hoisin', 'sauce-pinoy'] },
     ],
   },
 ] as const

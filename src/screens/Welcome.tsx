@@ -58,9 +58,9 @@ export function Welcome() {
       <p className="disclaimer">
         A game, not medical advice. The calorie figures are standard reference values and the
         budget comes from a well-known estimating formula — useful for building intuition, not
-        for managing a health condition. The allergy, gout and halal flags read the obvious
-        ingredients only; they are no substitute for the label on the packet or for what your
-        own doctor tells you.
+        for managing a health condition. The dietary flags read the obvious ingredients only;
+        they are no substitute for the label on the packet or for what your own doctor tells
+        you.
       </p>
     </div>
   )
