@@ -54,10 +54,8 @@ const coopStart = (): GameState =>
 /** Plays a whole dish through, taking the cheapest option in each slot. */
 function shopCheaply(state: GameState): GameState {
   let s = state
-  for (let guard = 0; guard < 30; guard++) {
-    if (s.phase !== 'store' || !s.current?.dishId) break
-    const dish = getDish(s.current.dishId)!
-    const slot = dish.slots[s.current.slotIndex]!
+  const dish = getDish(s.current!.dishId!)!
+  for (const slot of dish.slots) {
     const cheapest = slot.options.reduce((best, option) => {
       const p = CATALOG[option.productId]
       const q = CATALOG[best.productId]
@@ -141,18 +139,29 @@ describe('starting a meal', () => {
 })
 
 describe('shopping', () => {
-  it('advances one ingredient at a time and lands on the cart at the end', () => {
+  it('opens on the pot, with nothing chosen yet', () => {
+    const state = gameReducer(soloStart(), { type: 'CHOOSE_DISH', dishId: 'tapsilog' })
+    expect(state.phase).toBe('store')
+    expect(state.current!.openSlotId).toBeNull()
+    expect(state.current!.pickOrder).toEqual([])
+  })
+
+  it('decides ingredients in any order and lands on the cart once every slot has one', () => {
     let state = gameReducer(soloStart(), { type: 'CHOOSE_DISH', dishId: 'tapsilog' })
     const dish = getDish('tapsilog')!
+
+    // Decide the last slot first — nothing about order should matter.
+    const last = dish.slots[dish.slots.length - 1]!
+    state = gameReducer(state, { type: 'CHOOSE_OPTION', slotId: last.id, optionId: last.options[0]!.id })
     expect(state.phase).toBe('store')
-    expect(state.current!.slotIndex).toBe(0)
+    expect(state.current!.openSlotId).toBeNull()
 
     state = shopCheaply(state)
     expect(state.phase).toBe('cart')
     expect(Object.keys(state.current!.choices)).toHaveLength(dish.slots.length)
   })
 
-  it('records a skip as null, distinct from an unreached slot', () => {
+  it('records a skip as null, distinct from an undecided slot', () => {
     let state = gameReducer(soloStart(), { type: 'CHOOSE_DISH', dishId: 'tapsilog' })
     const dish = getDish('tapsilog')!
     state = gameReducer(state, { type: 'CHOOSE_OPTION', slotId: dish.slots[0]!.id, optionId: null })
@@ -160,24 +169,21 @@ describe('shopping', () => {
     expect(dish.slots[1]!.id in state.current!.choices).toBe(false)
   })
 
-  it('lets the player jump back to an earlier ingredient and change it', () => {
+  it('opens an ingredient card and lets the player change an earlier decision', () => {
     let state = gameReducer(soloStart(), { type: 'CHOOSE_DISH', dishId: 'tapsilog' })
     const dish = getDish('tapsilog')!
     state = shopCheaply(state)
-    state = gameReducer(state, { type: 'GOTO_INGREDIENT', index: 1 })
+    state = gameReducer(state, { type: 'OPEN_INGREDIENT', slotId: dish.slots[1]!.id })
     expect(state.phase).toBe('store')
-    expect(state.current!.slotIndex).toBe(1)
+    expect(state.current!.openSlotId).toBe(dish.slots[1]!.id)
     // The rest of the cart survives the detour.
     expect(state.current!.choices[dish.slots[0]!.id]).toBeTruthy()
   })
 
-  it('clamps an out-of-range jump instead of rendering an empty shelf', () => {
-    let state = gameReducer(soloStart(), { type: 'CHOOSE_DISH', dishId: 'tapsilog' })
-    const dish = getDish('tapsilog')!
-    state = gameReducer(state, { type: 'GOTO_INGREDIENT', index: 999 })
-    expect(state.current!.slotIndex).toBe(dish.slots.length - 1)
-    state = gameReducer(state, { type: 'GOTO_INGREDIENT', index: -5 })
-    expect(state.current!.slotIndex).toBe(0)
+  it('ignores a request to open an ingredient this dish does not have', () => {
+    const state = gameReducer(soloStart(), { type: 'CHOOSE_DISH', dishId: 'tapsilog' })
+    const after = gameReducer(state, { type: 'OPEN_INGREDIENT', slotId: 'not-a-real-slot' })
+    expect(after).toEqual(state)
   })
 
   it('starts a fresh cart when the player picks a different dish', () => {
@@ -185,7 +191,73 @@ describe('shopping', () => {
     state = shopCheaply(state)
     state = gameReducer(state, { type: 'CHOOSE_DISH', dishId: 'pancakes' })
     expect(state.current!.choices).toEqual({})
-    expect(state.current!.slotIndex).toBe(0)
+    expect(state.current!.openSlotId).toBeNull()
+    expect(state.current!.pickOrder).toEqual([])
+  })
+})
+
+describe('multi-select slots', () => {
+  it('toggles an option on and off without closing the card', () => {
+    let state = gameReducer(soloStart(), { type: 'CHOOSE_DISH', dishId: 'filipino-spaghetti' })
+    state = gameReducer(state, { type: 'OPEN_INGREDIENT', slotId: 'aromatics' })
+
+    state = gameReducer(state, { type: 'TOGGLE_OPTION', slotId: 'aromatics', optionId: 'onion-60g' })
+    expect(state.current!.choices.aromatics).toEqual(['onion-60g'])
+    expect(state.current!.openSlotId).toBe('aromatics')
+
+    state = gameReducer(state, { type: 'TOGGLE_OPTION', slotId: 'aromatics', optionId: 'garlic-15g' })
+    expect(state.current!.choices.aromatics).toEqual(['onion-60g', 'garlic-15g'])
+    expect(state.current!.openSlotId).toBe('aromatics')
+
+    // Toggling the same option again removes it, not adds a duplicate.
+    state = gameReducer(state, { type: 'TOGGLE_OPTION', slotId: 'aromatics', optionId: 'onion-60g' })
+    expect(state.current!.choices.aromatics).toEqual(['garlic-15g'])
+  })
+
+  it('spends one turn on the first toggle, not one per option', () => {
+    let state = gameReducer(coopStart(), { type: 'CHOOSE_DISH', dishId: 'filipino-spaghetti' })
+    const before = pickerFor(state)?.id
+
+    state = gameReducer(state, { type: 'TOGGLE_OPTION', slotId: 'aromatics', optionId: 'onion-60g' })
+    expect(pickerFor(state)?.id).not.toBe(before)
+    const afterFirst = pickerFor(state)?.id
+
+    state = gameReducer(state, { type: 'TOGGLE_OPTION', slotId: 'aromatics', optionId: 'garlic-15g' })
+    expect(pickerFor(state)?.id).toBe(afterFirst)
+  })
+
+  it('ignores a toggle on a slot that is not multi-select', () => {
+    const state = gameReducer(soloStart(), { type: 'CHOOSE_DISH', dishId: 'filipino-spaghetti' })
+    const after = gameReducer(state, { type: 'TOGGLE_OPTION', slotId: 'pasta', optionId: 'spaghetti-dry-85g' })
+    expect(after).toEqual(state)
+  })
+
+  it('clears every toggled option when the player leaves the slot out', () => {
+    let state = gameReducer(soloStart(), { type: 'CHOOSE_DISH', dishId: 'filipino-spaghetti' })
+    state = gameReducer(state, { type: 'TOGGLE_OPTION', slotId: 'aromatics', optionId: 'onion-60g' })
+    state = gameReducer(state, { type: 'CHOOSE_OPTION', slotId: 'aromatics', optionId: null })
+    expect(state.current!.choices.aromatics).toBeNull()
+    // Leaving it out is a decision like any other — it closes the card.
+    expect(state.current!.openSlotId).toBeNull()
+  })
+
+  it('counts a multi-select slot as decided once it has any array value, including empty', () => {
+    let state = gameReducer(soloStart(), { type: 'CHOOSE_DISH', dishId: 'filipino-spaghetti' })
+    const dish = getDish('filipino-spaghetti')!
+    for (const slot of dish.slots) {
+      if (slot.id === 'aromatics') continue
+      state = gameReducer(state, {
+        type: 'CHOOSE_OPTION',
+        slotId: slot.id,
+        optionId: slot.options[0]!.id,
+      })
+    }
+    expect(state.phase).toBe('store') // aromatics is still undecided
+
+    state = gameReducer(state, { type: 'TOGGLE_OPTION', slotId: 'aromatics', optionId: 'onion-60g' })
+    state = gameReducer(state, { type: 'TOGGLE_OPTION', slotId: 'aromatics', optionId: 'onion-60g' })
+    expect(state.current!.choices.aromatics).toEqual([])
+    expect(state.phase).toBe('cart') // decided as "nothing", but decided
   })
 })
 
@@ -610,12 +682,16 @@ describe('everyone gets a fair share of the turns', () => {
     expect(pickerFor(state)?.id).toBe(state.players[dish.slots.length % 2]!.id)
   })
 
-  it('shows the same picker when you go back to change an earlier ingredient', () => {
+  it('shows the same picker no matter which ingredient card is open', () => {
     let state = gameReducer(coopStart(), { type: 'CHOOSE_DISH', dishId: 'tapsilog' })
-    state = gameReducer(state, { type: 'GOTO_INGREDIENT', index: 3 })
+    const dish = getDish('tapsilog')!
     const first = pickerFor(state)?.id
-    state = gameReducer(state, { type: 'GOTO_INGREDIENT', index: 0 })
-    state = gameReducer(state, { type: 'GOTO_INGREDIENT', index: 3 })
+
+    state = gameReducer(state, { type: 'OPEN_INGREDIENT', slotId: dish.slots[3]!.id })
+    expect(pickerFor(state)?.id).toBe(first)
+
+    state = gameReducer(state, { type: 'OPEN_INGREDIENT', slotId: null })
+    state = gameReducer(state, { type: 'OPEN_INGREDIENT', slotId: dish.slots[0]!.id })
     expect(pickerFor(state)?.id).toBe(first)
   })
 })

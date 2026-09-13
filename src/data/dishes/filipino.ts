@@ -107,6 +107,7 @@ export const FILIPINO_DISHES: Dish[] = [
         label: 'Aromatics',
         prompt: 'Garlic and bay leaf, or more?',
         optional: true,
+        multi: true,
         options: [
           opt('garlic', g(20), 'a whole head, smashed'),
           opt('aromatics', g(3), 'bay leaf and peppercorns'),
@@ -165,6 +166,7 @@ export const FILIPINO_DISHES: Dish[] = [
         label: 'Vegetables',
         prompt: 'What greens are going in?',
         optional: true,
+        multi: true,
         options: [
           opt('kangkong', g(100), 'a big handful'),
           opt('pechay', g(100), 'a bunch'),
@@ -177,6 +179,7 @@ export const FILIPINO_DISHES: Dish[] = [
         label: 'More vegetables',
         prompt: 'Anything else in the broth?',
         optional: true,
+        multi: true,
         options: [
           opt('labanos', g(100), 'sliced into rounds'),
           opt('okra', g(80), 'six pieces'),
@@ -243,6 +246,7 @@ export const FILIPINO_DISHES: Dish[] = [
         label: 'The vegetable',
         prompt: 'Papaya is traditional, but anything mild works.',
         optional: true,
+        multi: true,
         options: [
           opt('kalabasa', g(150), 'squash, cubed'),
           opt('labanos', g(120), 'radish'),
@@ -254,6 +258,7 @@ export const FILIPINO_DISHES: Dish[] = [
         label: 'Greens',
         prompt: 'Stirred in at the very end.',
         optional: true,
+        multi: true,
         options: [
           opt('kangkong', g(80), 'a handful'),
           opt('pechay', g(80), 'a small bunch'),
@@ -313,6 +318,7 @@ export const FILIPINO_DISHES: Dish[] = [
         label: 'Vegetables',
         prompt: 'Pancit is mostly vegetables if you let it be.',
         optional: true,
+        multi: true,
         options: [
           opt('cabbage', g(120), 'shredded'),
           opt('carrot', g(80), 'julienned'),
@@ -337,6 +343,7 @@ export const FILIPINO_DISHES: Dish[] = [
         label: 'Garnish',
         prompt: 'Anything on top?',
         optional: true,
+        multi: true,
         options: [
           opt('calamansi', g(30), 'two, halved'),
           opt('scallion', g(20), 'chopped'),
@@ -382,6 +389,7 @@ export const FILIPINO_DISHES: Dish[] = [
         label: 'Vegetables',
         prompt: 'Kare-kare carries a lot of vegetables.',
         optional: true,
+        multi: true,
         options: [
           opt('sitaw', g(100), 'cut into fingers'),
           opt('eggplant', g(120), 'sliced thick'),
@@ -440,6 +448,7 @@ export const FILIPINO_DISHES: Dish[] = [
         label: 'In the mix',
         prompt: 'Vegetables stretch the filling.',
         optional: true,
+        multi: true,
         options: [
           opt('carrot', g(60), 'finely diced'),
           opt('onion', g(50), 'finely diced'),
@@ -517,6 +526,7 @@ export const FILIPINO_DISHES: Dish[] = [
         label: 'Greens',
         prompt: 'Stirred in at the end.',
         optional: true,
+        multi: true,
         options: [
           opt('ampalaya', g(100), 'bitter melon, sliced'),
           opt('kangkong', g(100), 'a big handful'),
@@ -528,6 +538,7 @@ export const FILIPINO_DISHES: Dish[] = [
         label: 'The sauté base',
         prompt: 'Ginisa means sautéed — this is where it starts.',
         optional: true,
+        multi: true,
         options: [
           opt('onion', g(60), 'one small onion'),
           opt('garlic', g(15), 'three cloves'),

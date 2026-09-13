@@ -19,7 +19,13 @@ import {
   type MealSlot,
   type Profile,
 } from '../engine/calories'
-import { buildCart, cartTotals, type Choices, type CartTotals } from '../engine/cart'
+import {
+  buildCart,
+  cartTotals,
+  selectedOptionIds,
+  type Choices,
+  type CartTotals,
+} from '../engine/cart'
 import { gradeDay, gradeMeal, type DayVerdict, type MealVerdict } from '../engine/nutrition'
 import { largestRemainder } from '../engine/split'
 
@@ -56,9 +62,15 @@ export interface CurrentMeal {
   slot: MealSlot
   menuId: MenuId | null
   dishId: string | null
-  /** Which ingredient slot the store is showing. */
-  slotIndex: number
+  /** Which ingredient's card is open, or null when showing the pot. */
+  openSlotId: string | null
   choices: Choices
+  /**
+   * Slot ids in the order each was first decided. Drives turn rotation and
+   * progress — not `choices`, whose key order isn't a contract, and not a
+   * slot index, since any ingredient can be opened in any order.
+   */
+  pickOrder: string[]
   /** Calories available for this meal: the players' share plus anything banked. */
   budget: number
   /**
@@ -122,7 +134,8 @@ export type Action =
   | { type: 'CHOOSE_MENU'; menuId: MenuId }
   | { type: 'CHOOSE_DISH'; dishId: string }
   | { type: 'CHOOSE_OPTION'; slotId: string; optionId: string | null }
-  | { type: 'GOTO_INGREDIENT'; index: number }
+  | { type: 'TOGGLE_OPTION'; slotId: string; optionId: string }
+  | { type: 'OPEN_INGREDIENT'; slotId: string | null }
   | { type: 'REVIEW_CART' }
   | { type: 'CHECKOUT' }
   | { type: 'NEXT_MEAL' }
@@ -261,8 +274,9 @@ function startMeal(state: GameState, mealIndex: number): CurrentMeal {
     slot,
     menuId: soleMenuFor(slot),
     dishId: null,
-    slotIndex: 0,
+    openSlotId: null,
     choices: {},
+    pickOrder: [],
     budget: mealPot(state.players, slot, state.banked),
     servings: Math.max(1, state.players.length),
   }
@@ -276,10 +290,14 @@ function phaseForMeal(meal: CurrentMeal): Phase {
  * Whose turn it is to tap. Everyone talks about every ingredient, but only one
  * person commits it, and that rotates — otherwise the loudest player quietly
  * ends up choosing the whole cart.
+ *
+ * Rotation advances on each *decision made*, not on which ingredient is open —
+ * any ingredient can be opened in any order, but reopening one already decided
+ * to look at it again must not burn a turn or skip the next player.
  */
 export function pickerFor(state: GameState): Player | null {
   if (state.mode !== 'coop' || state.players.length === 0 || !state.current) return null
-  const turn = picksBefore(state) + state.current.slotIndex
+  const turn = picksBefore(state) + state.current.pickOrder.length
   return state.players[turn % state.players.length] ?? null
 }
 
@@ -312,7 +330,7 @@ export function turnsPerPlayer(totalPicks: number, playerCount: number): number[
 
 /** Turns taken so far this run, per seat — shown on the chips in the store. */
 export function turnsSoFar(state: GameState): number[] {
-  const done = picksBefore(state) + (state.current?.slotIndex ?? 0)
+  const done = picksBefore(state) + (state.current?.pickOrder.length ?? 0)
   return turnsPerPlayer(done, state.players.length)
 }
 
@@ -377,7 +395,7 @@ export function gameReducer(state: GameState, action: Action): GameState {
       return {
         ...state,
         phase: 'store',
-        current: { ...state.current, dishId: action.dishId, slotIndex: 0, choices: {} },
+        current: { ...state.current, dishId: action.dishId, openSlotId: null, choices: {}, pickOrder: [] },
       }
 
     case 'CHOOSE_OPTION': {
@@ -385,27 +403,57 @@ export function gameReducer(state: GameState, action: Action): GameState {
       const dish = getDish(state.current.dishId)
       if (!dish) return state
 
+      // A slot already in `choices` is being revisited, not decided for the
+      // first time — changing your mind about the sauce doesn't consume
+      // another turn or reorder whose turn is next.
+      const firstDecision = !(action.slotId in state.current.choices)
       const choices = { ...state.current.choices, [action.slotId]: action.optionId }
-      const nextIndex = state.current.slotIndex + 1
-      const done = nextIndex >= dish.slots.length
+      const pickOrder = firstDecision
+        ? [...state.current.pickOrder, action.slotId]
+        : state.current.pickOrder
+      const done = dish.slots.every((s) => s.id in choices)
 
       return {
         ...state,
         phase: done ? 'cart' : 'store',
-        current: {
-          ...state.current,
-          choices,
-          slotIndex: done ? state.current.slotIndex : nextIndex,
-        },
+        current: { ...state.current, choices, pickOrder, openSlotId: null },
       }
     }
 
-    case 'GOTO_INGREDIENT': {
+    case 'TOGGLE_OPTION': {
       if (!state.current || !state.current.dishId) return state
       const dish = getDish(state.current.dishId)
       if (!dish) return state
-      const index = Math.max(0, Math.min(action.index, dish.slots.length - 1))
-      return { ...state, phase: 'store', current: { ...state.current, slotIndex: index } }
+      const slot = dish.slots.find((s) => s.id === action.slotId)
+      if (!slot?.multi) return state
+
+      const firstDecision = !(action.slotId in state.current.choices)
+      const selected = selectedOptionIds(state.current.choices, action.slotId)
+      const next = selected.includes(action.optionId)
+        ? selected.filter((id) => id !== action.optionId)
+        : [...selected, action.optionId]
+
+      const choices = { ...state.current.choices, [action.slotId]: next }
+      const pickOrder = firstDecision
+        ? [...state.current.pickOrder, action.slotId]
+        : state.current.pickOrder
+      const done = dish.slots.every((s) => s.id in choices)
+
+      // The card stays open — a multi-select slot is several taps, not one,
+      // so it can't close itself the moment the first option lands.
+      return {
+        ...state,
+        phase: done ? 'cart' : 'store',
+        current: { ...state.current, choices, pickOrder },
+      }
+    }
+
+    case 'OPEN_INGREDIENT': {
+      if (!state.current || !state.current.dishId) return state
+      const dish = getDish(state.current.dishId)
+      if (!dish) return state
+      if (action.slotId !== null && !dish.slots.some((s) => s.id === action.slotId)) return state
+      return { ...state, phase: 'store', current: { ...state.current, openSlotId: action.slotId } }
     }
 
     case 'REVIEW_CART':

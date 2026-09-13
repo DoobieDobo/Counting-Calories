@@ -59,6 +59,7 @@ export const CHINESE_DISHES: Dish[] = [
         label: 'Vegetables',
         prompt: 'What goes in the wok with it?',
         optional: true,
+        multi: true,
         options: [
           opt('bell-pepper', g(120), 'two, chunked'),
           opt('onion', g(80), 'one, chunked'),
@@ -128,6 +129,7 @@ export const CHINESE_DISHES: Dish[] = [
         label: 'Aromatics',
         prompt: 'Into the hot wok first.',
         optional: true,
+        multi: true,
         options: [
           opt('garlic', g(15), 'three cloves'),
           opt('ginger', g(15), 'a thumb'),
@@ -188,6 +190,7 @@ export const CHINESE_DISHES: Dish[] = [
         label: 'Vegetables',
         prompt: 'Stirred through.',
         optional: true,
+        multi: true,
         options: [
           opt('snow-peas', g(80), 'a handful'),
           opt('corn-kernels', g(80), 'sweetcorn'),
@@ -269,6 +272,7 @@ export const CHINESE_DISHES: Dish[] = [
         label: 'Greens',
         prompt: 'What is floating in it?',
         optional: true,
+        multi: true,
         options: [
           opt('napa-cabbage', g(120), 'a handful'),
           opt('pechay', g(100), 'bok choy'),
@@ -281,6 +285,7 @@ export const CHINESE_DISHES: Dish[] = [
         label: 'Aromatics',
         prompt: 'In the filling and the broth.',
         optional: true,
+        multi: true,
         options: [
           opt('ginger', g(15), 'a thumb'),
           opt('scallion', g(30), 'sliced'),
@@ -359,6 +364,7 @@ export const CHINESE_DISHES: Dish[] = [
         label: 'Vegetables',
         prompt: 'What else is in the wok?',
         optional: true,
+        multi: true,
         options: [
           opt('bell-pepper', g(100), 'diced'),
           opt('celery', g(80), 'diced'),
@@ -408,6 +414,7 @@ export const CHINESE_DISHES: Dish[] = [
         label: 'Vegetables',
         prompt: 'Chow mein takes as many as you give it.',
         optional: true,
+        multi: true,
         options: [
           opt('cabbage', g(150), 'shredded'),
           opt('bean-sprouts', g(120), 'togue'),
@@ -499,6 +506,7 @@ export const CHINESE_DISHES: Dish[] = [
         label: 'Aromatics',
         prompt: 'Into the oil first.',
         optional: true,
+        multi: true,
         options: [
           opt('garlic', g(15), 'three cloves'),
           opt('ginger', g(12), 'a thumb'),
@@ -557,6 +565,7 @@ export const CHINESE_DISHES: Dish[] = [
         label: 'In the filling',
         prompt: 'Cabbage stretches it and keeps it juicy.',
         optional: true,
+        multi: true,
         options: [
           opt('napa-cabbage', g(120), 'finely chopped'),
           opt('cabbage', g(120), 'finely chopped'),

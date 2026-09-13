@@ -48,6 +48,7 @@ export const AMERICAN_DISHES: Dish[] = [
         label: 'Salad',
         prompt: 'The free calories. Load up.',
         optional: true,
+        multi: true,
         options: [
           opt('lettuce-romaine', g(30), 'a leaf or two'),
           opt('tomato-fresh', g(50), 'two slices'),
@@ -73,6 +74,7 @@ export const AMERICAN_DISHES: Dish[] = [
         label: 'Extras',
         prompt: 'Going further?',
         optional: true,
+        multi: true,
         options: [
           opt('bacon', g(30), 'two rashers'),
           opt('avocado', g(50), 'a few slices'),
@@ -152,6 +154,7 @@ export const AMERICAN_DISHES: Dish[] = [
         label: 'Vegetables',
         prompt: 'Anything green in there?',
         optional: true,
+        multi: true,
         options: [
           opt('broccoli', g(120), 'florets, stirred in'),
           opt('spinach', g(100), 'wilted in'),
@@ -163,6 +166,7 @@ export const AMERICAN_DISHES: Dish[] = [
         label: 'Topping',
         prompt: 'Baked with a crust?',
         optional: true,
+        multi: true,
         options: [
           opt('breadcrumbs', g(25), 'panko crust'),
           opt('bacon', g(30), 'crumbled bacon'),
@@ -300,6 +304,7 @@ export const AMERICAN_DISHES: Dish[] = [
         label: 'Croutons',
         prompt: 'The crunch.',
         optional: true,
+        multi: true,
         options: [
           opt('croutons', g(30), 'a handful'),
           opt('croutons', g(15), 'a few'),
@@ -321,6 +326,7 @@ export const AMERICAN_DISHES: Dish[] = [
         label: 'Extras',
         prompt: 'Anything else in the bowl?',
         optional: true,
+        multi: true,
         options: [
           opt('bacon', g(25), 'crumbled bacon'),
           opt('tomato-cherry', g(80), 'halved'),
@@ -377,6 +383,7 @@ export const AMERICAN_DISHES: Dish[] = [
         label: 'Vegetables',
         prompt: 'What else is in there?',
         optional: true,
+        multi: true,
         options: [
           opt('onion', g(80), 'one, diced'),
           opt('bell-pepper', g(100), 'one, diced'),
@@ -400,6 +407,7 @@ export const AMERICAN_DISHES: Dish[] = [
         label: 'On top',
         prompt: 'How are you finishing the bowl?',
         optional: true,
+        multi: true,
         options: [
           opt('cheddar', g(30), 'grated over'),
           opt('sour-cream', g(40), 'a dollop'),
@@ -478,6 +486,7 @@ export const AMERICAN_DISHES: Dish[] = [
         label: 'Extras',
         prompt: 'Anything else in it?',
         optional: true,
+        multi: true,
         options: [
           opt('cheese-slice', pc(1), 'a slice of cheese'),
           opt('egg', pc(1), 'a fried egg'),
@@ -533,6 +542,7 @@ export const AMERICAN_DISHES: Dish[] = [
         label: 'In the mix',
         prompt: 'Vegetables keep it moist and stretch it.',
         optional: true,
+        multi: true,
         options: [
           opt('onion', g(80), 'finely diced'),
           opt('carrot', g(80), 'grated in'),
@@ -634,6 +644,7 @@ export const AMERICAN_DISHES: Dish[] = [
         label: 'Celery & carrots',
         prompt: 'The sticks nobody eats.',
         optional: true,
+        multi: true,
         options: [
           opt('celery', g(100), 'a handful of sticks'),
           opt('carrot', g(100), 'carrot sticks'),

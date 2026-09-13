@@ -98,6 +98,10 @@ export function BudgetReveal() {
       <div className="budget-hero card">
         <span className="eyebrow">Calories a day</span>
         <strong className="num budget-hero-figure">{total.toLocaleString()}</strong>
+        <p className="lede budget-hero-explainer">
+          A calorie is a unit of energy, the same one printed on every nutrition label. Your body
+          burns some just staying alive, and everything you eat adds to the total below.
+        </p>
         {!isCoop && (
           <p className="lede">
             {first.target.bmr.toLocaleString()} at rest, {first.target.tdee.toLocaleString()} with

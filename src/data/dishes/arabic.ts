@@ -50,6 +50,7 @@ export const ARABIC_DISHES: Dish[] = [
         label: 'Salad',
         prompt: 'What else goes in the wrap?',
         optional: true,
+        multi: true,
         options: [
           opt('tomato-fresh', g(70), 'diced'),
           opt('cucumber', g(70), 'diced'),
@@ -62,6 +63,7 @@ export const ARABIC_DISHES: Dish[] = [
         label: 'Pickles',
         prompt: 'The sharp bit.',
         optional: true,
+        multi: true,
         options: [
           opt('pickles', g(40), 'pickled turnip stand-in'),
           opt('olives', g(30), 'a few olives'),
@@ -128,6 +130,7 @@ export const ARABIC_DISHES: Dish[] = [
         label: 'Salad',
         prompt: 'Fill the rest of the wrap.',
         optional: true,
+        multi: true,
         options: [
           opt('tomato-fresh', g(70), 'diced'),
           opt('cucumber', g(70), 'diced'),
@@ -140,6 +143,7 @@ export const ARABIC_DISHES: Dish[] = [
         label: 'Pickles',
         prompt: 'The sharp bit.',
         optional: true,
+        multi: true,
         options: [
           opt('pickles', g(40), 'pickled turnip stand-in'),
           opt('olives', g(30), 'a few olives'),
@@ -216,6 +220,7 @@ export const ARABIC_DISHES: Dish[] = [
         label: 'Mezze extras',
         prompt: 'What else is on the table?',
         optional: true,
+        multi: true,
         options: [
           opt('olives', g(40), 'a small bowl'),
           opt('tomato-fresh', g(120), 'a plate of sliced tomatoes'),
@@ -284,6 +289,7 @@ export const ARABIC_DISHES: Dish[] = [
         label: 'In the pot',
         prompt: 'What cooks with the rice?',
         optional: true,
+        multi: true,
         options: [
           opt('tomato-fresh', g(150), 'two, chopped'),
           opt('onion', g(100), 'one large'),
@@ -296,6 +302,7 @@ export const ARABIC_DISHES: Dish[] = [
         label: 'Garnish',
         prompt: 'Scattered on top before serving.',
         optional: true,
+        multi: true,
         options: [
           opt('almonds', g(20), 'toasted, slivered'),
           opt('raisins', g(30), 'a scattering'),
@@ -351,6 +358,7 @@ export const ARABIC_DISHES: Dish[] = [
         label: 'Vegetables',
         prompt: 'Chopped fine and folded in.',
         optional: true,
+        multi: true,
         options: [
           opt('tomato-fresh', g(150), 'diced small'),
           opt('cucumber', g(100), 'diced small'),
@@ -419,6 +427,7 @@ export const ARABIC_DISHES: Dish[] = [
         label: 'In the mix',
         prompt: 'What is worked into the meat?',
         optional: true,
+        multi: true,
         options: [
           opt('onion', g(70), 'grated in'),
           opt('parsley', g(25), 'finely chopped'),
@@ -466,6 +475,7 @@ export const ARABIC_DISHES: Dish[] = [
         label: 'Salad',
         prompt: 'The plate is not complete without it.',
         optional: true,
+        multi: true,
         options: [
           opt('tomato-fresh', g(100), 'sliced'),
           opt('cucumber', g(100), 'sliced'),

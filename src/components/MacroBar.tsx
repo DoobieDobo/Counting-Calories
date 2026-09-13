@@ -19,8 +19,13 @@ export function MacroBar({ split, size = 'full' }: Props) {
 
   const empty = parts.every((p) => p.value <= 0)
 
+  const pct = (n: number) => Math.round(n * 100)
+  const title = empty
+    ? 'Where the calories come from — nothing to show yet'
+    : `Where the calories come from: ${pct(split.protein)}% protein, ${pct(split.carbs)}% carbs, ${pct(split.fat)}% fat`
+
   return (
-    <div className={`macro macro-${size}`}>
+    <div className={`macro macro-${size}`} title={title}>
       <div className="macro-track" aria-hidden={size === 'micro'}>
         {empty ? (
           <div className="macro-seg macro-empty" style={{ width: '100%' }} />

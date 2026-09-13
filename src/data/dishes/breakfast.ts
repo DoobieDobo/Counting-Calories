@@ -303,6 +303,7 @@ export const BREAKFAST_DISHES: Dish[] = [
         label: 'On top',
         prompt: 'Anything else on the stack?',
         optional: true,
+        multi: true,
         options: [
           opt('butter', g(10), 'a pat'),
           opt('berries', g(100), 'a handful'),
@@ -431,6 +432,7 @@ export const BREAKFAST_DISHES: Dish[] = [
         label: 'Fruit',
         prompt: 'What goes on top?',
         optional: true,
+        multi: true,
         options: [
           opt('banana', g(120), 'one, sliced'),
           opt('berries', g(100), 'a handful'),
@@ -455,6 +457,7 @@ export const BREAKFAST_DISHES: Dish[] = [
         label: 'Something rich',
         prompt: 'The thing that makes it stick.',
         optional: true,
+        multi: true,
         options: [
           opt('peanut-butter', g(25), 'a spoonful'),
           opt('almonds', g(20), 'a small handful'),
@@ -533,6 +536,7 @@ export const BREAKFAST_DISHES: Dish[] = [
         label: 'Salsa & extras',
         prompt: 'Anything fresh in there?',
         optional: true,
+        multi: true,
         options: [
           opt('salsa', g(50), 'two tablespoons'),
           opt('avocado', g(60), 'a third of one'),

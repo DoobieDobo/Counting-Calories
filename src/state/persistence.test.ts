@@ -11,7 +11,7 @@ import { clear, initialGameState, load, save } from './persistence'
 import { initialState, type GameState } from './gameReducer'
 import { dailyTarget, type Profile } from '../engine/calories'
 
-const KEY = 'counting-calories:run:v3'
+const KEY = 'counting-calories:run:v4'
 const OLD_KEY = 'counting-calories:run:v1'
 
 /** Minimal in-memory localStorage, since these tests run under node. */
@@ -55,7 +55,8 @@ function coopRun(overrides: Partial<GameState> = {}): GameState {
       slot: 'breakfast',
       menuId: 'breakfast',
       dishId: 'tapsilog',
-      slotIndex: 1,
+      openSlotId: null,
+      pickOrder: ['tapa'],
       choices: { tapa: 'beef-tapa-120g' },
       budget: 1172,
       servings: 2,
