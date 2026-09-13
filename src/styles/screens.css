@@ -29,7 +29,7 @@
   height: 26px;
   border-radius: 50%;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 800;
   font-size: 0.85rem;
   display: grid;
@@ -83,7 +83,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--accent);
+  color: var(--accent-ink);
   background: var(--accent-soft);
   border-radius: 6px;
   padding: 4px 9px;
@@ -203,7 +203,7 @@
 .chip-active {
   border-color: var(--accent);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 650;
 }
 
@@ -275,7 +275,7 @@
 .pot-figure {
   font-size: clamp(2.6rem, 10vw, 4rem);
   line-height: 1;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .pot-unit {
@@ -374,7 +374,7 @@
 .notice-info {
   background: var(--accent-soft);
   border-color: color-mix(in srgb, var(--accent) 30%, transparent);
-  color: color-mix(in srgb, var(--accent) 78%, var(--text));
+  color: color-mix(in srgb, var(--accent-ink) 82%, var(--text));
 }
 
 .notice-danger {
@@ -473,7 +473,7 @@
   align-items: baseline;
   gap: 5px;
   font-size: 0.95rem;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .dish-range-dash,
@@ -627,12 +627,12 @@
   font-size: 2.1rem;
   font-weight: 800;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .verdict-b .verdict-grade {
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .verdict-c .verdict-grade {
@@ -792,7 +792,7 @@
   font-weight: 800;
   font-size: 0.85rem;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .grade-c {
@@ -1154,14 +1154,78 @@
   z-index: 40;
 }
 
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .sidebar-mark {
+  flex: 1;
+  min-width: 0;
   margin: 0;
   padding: 0 8px;
+  border: none;
+  background: none;
+  font: inherit;
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  text-align: left;
   color: var(--text-muted);
+  cursor: pointer;
+}
+
+.sidebar-mark:hover {
+  color: var(--text);
+}
+
+/* Shown at desktop widths only — see the 900px block below. */
+.sidebar-collapse {
+  display: none;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.sidebar-collapse:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/*
+ * The rail's replacement once it's tucked away. Same corner theme.css's
+ * `.sidebar-toggle` avoids, for the same reason: nothing here should ever sit
+ * over the store's sticky budget bar.
+ */
+.sidebar-expand {
+  display: none;
+  position: fixed;
+  top: 20px;
+  left: 0;
+  height: 40px;
+  padding: 0 14px 0 12px;
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  border-left: none;
+  border-radius: 0 999px 999px 0;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.1rem;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 18%);
+  cursor: pointer;
+  z-index: 45;
 }
 
 .sidebar-items {
@@ -1206,7 +1270,7 @@
   padding: 1px 7px;
   border-radius: 999px;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -1316,6 +1380,28 @@
     transform: translateY(0);
     visibility: visible;
     transition: transform 0.18s ease, visibility 0s;
+  }
+}
+
+@media (min-width: 900px) {
+  .sidebar-collapse {
+    display: inline-flex;
+  }
+
+  .sidebar {
+    transition: transform 0.18s ease, visibility 0s linear;
+  }
+
+  :root.sidebar-collapsed .sidebar {
+    transform: translateX(-100%);
+    /* Delayed so the rail is gone before it stops being in the tab order —
+       same reasoning as the mobile sheet's own visibility toggle above. */
+    visibility: hidden;
+    transition: transform 0.18s ease, visibility 0s linear 0.18s;
+  }
+
+  :root.sidebar-collapsed .sidebar-expand {
+    display: inline-flex;
   }
 }
 
