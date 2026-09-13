@@ -250,9 +250,7 @@ export function ProfileForm() {
           </label>
 
           <div className="field">
-            <span className="field-label">
-              Sex <span className="field-hint">— the formula needs it</span>
-            </span>
+            <span className="field-label">Sex</span>
             <div className="chip-row" role="group" aria-label="Sex">
               {SEXES.map((s) => (
                 <button

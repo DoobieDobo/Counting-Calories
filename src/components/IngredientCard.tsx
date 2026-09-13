@@ -93,8 +93,8 @@ export function IngredientCard({
           <div className="picker-banner" style={{ '--seat': seatColor(pickerIndex) } as React.CSSProperties}>
             <span className="player-chip-dot" aria-hidden="true" />
             <span>
-              <strong>{picker.profile.name}</strong> is picking this one. Everyone gets a say —
-              only they get to tap.
+              <strong>{picker.profile.name}</strong>'s turn to pick. The table is open for
+              discussion, but it's not a democracy unless {picker.profile.name} calls for a vote.
             </span>
           </div>
           <PlayerChips players={players} activeId={picker.id} turns={turns} />
@@ -174,6 +174,7 @@ export function IngredientCard({
         <div className="btn-row store-actions">
           <RollButton
             label={slot.multi ? 'Add one for me' : 'Pick one for me'}
+            ghost
             onRoll={() => {
               if (slot.multi) {
                 const remaining = slot.options.filter((o) => !selectedIds.includes(o.id))

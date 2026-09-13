@@ -1,8 +1,11 @@
 /*
  * Design tokens and the handful of global rules everything else builds on.
  *
- * The look is a bright grocery aisle: warm paper, produce green, and a receipt
- * red for going over budget. Dark mode is the same shop after closing time.
+ * The look is a creamy salmon dish: cream and charcoal for the ground, vibrant
+ * orange as the one brand colour, moss olive and warm yellow standing in for
+ * it wherever raw orange would be too bright to read as text. Dark mode is the
+ * same plate under warmer light — same orange, charcoal for the tablecloth
+ * instead of the plate.
  */
 
 :root {
@@ -14,59 +17,82 @@
    * complete, readable palette instead of unstyled text. The second declaration
    * of each token wins everywhere that supports it.
    */
-  --bg: #fdf8f0;
-  --bg-sunken: #f4ece0;
+  --bg: #ffe8be;
+  --bg-sunken: #f1dbb4;
   --surface: #ffffff;
   --surface-raised: #ffffff;
-  --border: #e4d9c8;
-  --border-strong: #cfc0a9;
-  --text: #241d14;
-  --text-muted: #6d6153;
-  --text-faint: #948877;
-  --accent: #1f7a4d;
-  --accent-soft: #e4f2ea;
-  --accent-text: #ffffff;
-  --warn: #b8730f;
-  --warn-soft: #fbf0dd;
+  --border: #dcc8a4;
+  --border-strong: #ad9e82;
+  --text: #151513;
+  --text-muted: #675f4f;
+  --text-faint: #8a7f69;
+  --accent: #f29400;
+  --accent-soft: #fdefda;
+  --accent-text: #151513;
+  --accent-ink: #9a6108;
+  --warn: #596418;
+  --warn-soft: #eaeedd;
   --danger: #b8362f;
   --danger-soft: #fbe6e4;
   --protein: #3d7ea6;
-  --carbs: #c9902c;
+  --carbs: #ac9a38;
   --fat: #b8555f;
-  --shadow-near: rgb(36 29 20 / 6%);
-  --shadow-far: rgb(36 29 20 / 6%);
-  --shadow-near-lift: rgb(36 29 20 / 10%);
-  --shadow-far-lift: rgb(36 29 20 / 10%);
+  --shadow-near: rgb(21 21 19 / 6%);
+  --shadow-far: rgb(21 21 19 / 6%);
+  --shadow-near-lift: rgb(21 21 19 / 10%);
+  --shadow-far-lift: rgb(21 21 19 / 10%);
 
-  /* Warm paper and produce green by day; the same shop after closing by night. */
-  --bg: light-dark(#fdf8f0, #16130f);
-  --bg-sunken: light-dark(#f4ece0, #100e0b);
+  /* Cream and charcoal by day; the same charcoal for the ground by night too —
+     it was already almost this dark before the rebrand. */
+  --bg: light-dark(#ffe8be, #151513);
+  --bg-sunken: light-dark(#f1dbb4, #100e0b);
   --surface: light-dark(#ffffff, #211d18);
   --surface-raised: light-dark(#ffffff, #2a251e);
-  --border: light-dark(#e4d9c8, #362f26);
-  --border-strong: light-dark(#cfc0a9, #4b4133);
+  --border: light-dark(#dcc8a4, #362f26);
+  --border-strong: light-dark(#ad9e82, #4b4133);
 
-  --text: light-dark(#241d14, #f2ebe0);
-  --text-muted: light-dark(#6d6153, #b0a493);
-  --text-faint: light-dark(#948877, #83786a);
+  --text: light-dark(#151513, #ffe8be);
+  --text-muted: light-dark(#675f4f, #b0a493);
+  --text-faint: light-dark(#8a7f69, #83786a);
 
-  --accent: light-dark(#1f7a4d, #4bbd84);
-  --accent-soft: light-dark(#e4f2ea, #1a3128);
-  --accent-text: light-dark(#ffffff, #08150e);
+  /*
+   * The vibrant orange is bright enough to read on both grounds, so unlike the
+   * old accent it does not need to flip between a dark and a light shade —
+   * it's the one token in this file that is not a light-dark() pair.
+   *
+   * That brightness cuts the other way when the orange itself has to be the
+   * *foreground* — small print like the mode-select tag or the budget bar's
+   * "banked" figure. White-on-orange and orange-on-cream both fail contrast at
+   * this lightness, so --accent-ink exists for exactly those spots: a burnt
+   * amber in light mode (dark enough to read on cream or white), the orange
+   * itself in dark mode (already dark-ground-safe, so no burning needed).
+   */
+  --accent: #f29400;
+  --accent-soft: light-dark(#fdefda, #3a2a14);
+  --accent-text: #151513;
+  --accent-ink: light-dark(#9a6108, #f29400);
 
-  --warn: light-dark(#b8730f, #e0a341);
-  --warn-soft: light-dark(#fbf0dd, #2f2513);
+  /*
+   * Two shades of the same idea, not two colours: olive is the orange's
+   * accent-ink already — dark enough to read as caution text on cream — so
+   * warn just *is* olive in light mode. Dark mode needs the opposite polarity
+   * (light text on a dark ground), which is what the warm yellow is for.
+   */
+  --warn: light-dark(#596418, #ffcf58);
+  --warn-soft: light-dark(#eaeedd, #3a3212);
   --danger: light-dark(#b8362f, #ef7a72);
   --danger-soft: light-dark(#fbe6e4, #331815);
 
   --protein: light-dark(#3d7ea6, #6fb2d8);
-  --carbs: light-dark(#c9902c, #e0b45c);
+  /* Shifted off the old gold, which sat almost on top of the new orange
+     accent — a carbs bar and a selected-state fill are not the same thing. */
+  --carbs: light-dark(#ac9a38, #c8b96a);
   --fat: light-dark(#b8555f, #e0868f);
 
-  --shadow-near: light-dark(rgb(36 29 20 / 6%), rgb(0 0 0 / 30%));
-  --shadow-far: light-dark(rgb(36 29 20 / 6%), rgb(0 0 0 / 25%));
-  --shadow-near-lift: light-dark(rgb(36 29 20 / 10%), rgb(0 0 0 / 35%));
-  --shadow-far-lift: light-dark(rgb(36 29 20 / 10%), rgb(0 0 0 / 30%));
+  --shadow-near: light-dark(rgb(21 21 19 / 6%), rgb(0 0 0 / 30%));
+  --shadow-far: light-dark(rgb(21 21 19 / 6%), rgb(0 0 0 / 25%));
+  --shadow-near-lift: light-dark(rgb(21 21 19 / 10%), rgb(0 0 0 / 35%));
+  --shadow-far-lift: light-dark(rgb(21 21 19 / 10%), rgb(0 0 0 / 30%));
 
   --radius: 14px;
   --radius-sm: 9px;
@@ -186,6 +212,11 @@ button:disabled {
 @media (min-width: 900px) {
   .app-main {
     padding-left: var(--rail-width);
+    transition: padding-left 0.18s ease;
+  }
+
+  :root.sidebar-collapsed .app-main {
+    padding-left: 0;
   }
 }
 
@@ -221,7 +252,10 @@ button:disabled {
 }
 
 .card {
-  background: var(--surface);
+  /* Translucent on purpose, so the cream/charcoal ground reads through —
+     var(--surface) stays solid for controls (inputs, buttons, rows) that
+     need a crisp edge. */
+  background: color-mix(in srgb, var(--surface) 75%, transparent);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);

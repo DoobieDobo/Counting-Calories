@@ -97,8 +97,8 @@ export function Store() {
               >
                 <span className="player-chip-dot" aria-hidden="true" />
                 <span>
-                  <strong>{picker.profile.name}</strong> is picking next. Everyone gets a say —
-                  only they get to tap.
+                  <strong>{picker.profile.name}</strong>'s turn to pick next. The table is open for
+                  discussion, but it's not a democracy unless {picker.profile.name} calls for a vote.
                 </span>
               </div>
               <PlayerChips players={state.players} activeId={picker.id} turns={turns} />

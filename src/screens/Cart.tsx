@@ -144,7 +144,7 @@ export function Cart() {
       {!affordable && (
         <div className="notice notice-danger" role="alert">
           <strong>
-            {over.toLocaleString()} calories over. You can't check this out as it stands.
+            {over.toLocaleString()} calories over. Your budget is not enough.
           </strong>
           {swap && (
             <p>
