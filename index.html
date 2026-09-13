@@ -21,6 +21,21 @@
       } catch (e) {
         /* Storage off: fall through to following the OS. */
       }
+
+      /*
+       * Same reasoning, for the desktop rail: applied before paint so a
+       * collapsed sidebar doesn't flash open and then jump shut.
+       *
+       * The key is duplicated from src/state/sidebarPrefs.ts; change both
+       * together.
+       */
+      try {
+        if (localStorage.getItem('counting-calories:sidebar:v1') === 'collapsed') {
+          document.documentElement.classList.add('sidebar-collapsed')
+        }
+      } catch (e) {
+        /* Storage off: fall through to the rail being open. */
+      }
     </script>
   </head>
   <body>
