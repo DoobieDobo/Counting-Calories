@@ -598,6 +598,10 @@
   gap: 18px;
 }
 
+.ingredient-card-confirm {
+  margin-left: auto;
+}
+
 .ingredient-card-back {
   align-self: flex-start;
   padding-left: 0;

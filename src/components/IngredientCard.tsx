@@ -191,6 +191,19 @@ export function IngredientCard({
               🗳️ Call a vote
             </button>
           )}
+          {slot.multi && (
+            // Tapping an option here doesn't close the card the way a
+            // single-select slot does, so "Back to the pot" alone reads as
+            // ambiguous about whether anything was kept. This is the
+            // unambiguous confirm: it does exactly what the label says.
+            <button
+              type="button"
+              className="btn ingredient-card-confirm"
+              onClick={onClose}
+            >
+              Add to the pot and pick another ingredient →
+            </button>
+          )}
         </div>
       )}
     </div>
