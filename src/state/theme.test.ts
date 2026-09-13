@@ -113,14 +113,14 @@ describe('applying it', () => {
 
   it('matches the browser bar to the page', () => {
     applyTheme('dark')
-    expect(meta.content).toBe('#16130f')
+    expect(meta.content).toBe('#151513')
     applyTheme('light')
-    expect(meta.content).toBe('#fdf8f0')
+    expect(meta.content).toBe('#ffe8be')
   })
 
   it('follows the OS for the browser bar when nothing is chosen', () => {
     vi.stubGlobal('window', { matchMedia: () => ({ matches: true }) })
     applyTheme('system')
-    expect(meta.content).toBe('#16130f')
+    expect(meta.content).toBe('#151513')
   })
 })

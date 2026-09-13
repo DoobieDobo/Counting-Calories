@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { PLAN_DAYS } from '../state/gameReducer'
 import { useGame } from '../state/GameContext'
 import { clearRounds, loadRounds, subscribeRounds } from '../state/rounds'
+import { loadSidebarCollapsed, setSidebarCollapsed } from '../state/sidebarPrefs'
 import { THEME_LABEL, loadTheme, nextTheme, setTheme } from '../state/theme'
 
 /** How far the sheet has to be dragged down before letting go dismisses it. */
@@ -19,6 +20,21 @@ export function Sidebar() {
   const [open, setOpen] = useState(false)
   const [asking, setAsking] = useState<string | null>(null)
   const [theme, setThemeState] = useState(loadTheme)
+  const [collapsed, setCollapsedState] = useState(loadSidebarCollapsed)
+
+  // The class lives on <html>, not this component's own markup, because the
+  // thing it has to move is .app-main next door — same trick theme.ts uses
+  // for color-scheme. index.html sets it before first paint so a collapsed
+  // rail doesn't flash open first.
+  useEffect(() => {
+    document.documentElement.classList.toggle('sidebar-collapsed', collapsed)
+  }, [collapsed])
+
+  function toggleCollapsed() {
+    const next = !collapsed
+    setSidebarCollapsed(next)
+    setCollapsedState(next)
+  }
 
   // Subscribed rather than polled on phase change: React runs this child's
   // effects before the provider's, so a round finished on this very render
@@ -194,9 +210,30 @@ export function Sidebar() {
         {/* A gesture with no affordance is a gesture nobody finds. */}
         <span className="sidebar-grab" aria-hidden="true" />
 
-        <p className="sidebar-mark">
-          <span aria-hidden="true">🛒</span> Counting Calories
-        </p>
+        <div className="sidebar-head">
+          <button
+            type="button"
+            className="sidebar-mark"
+            onClick={() => {
+              dispatch({ type: 'GOTO', phase: 'welcome' })
+              setOpen(false)
+            }}
+          >
+            <span aria-hidden="true">🛒</span> Counting Calories
+          </button>
+
+          {/* Desktop only — under 900px the rail is already the sheet's own
+              close button, so a second way to hide it would be one too many. */}
+          <button
+            type="button"
+            className="sidebar-collapse"
+            onClick={toggleCollapsed}
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+          >
+            <span aria-hidden="true">«</span>
+          </button>
+        </div>
 
         <ul className="sidebar-items">
           {items.map((item) => (
@@ -226,6 +263,17 @@ export function Sidebar() {
           ))}
         </ul>
       </nav>
+
+      {/* The only way back once the rail is tucked away — desktop-only, shown by CSS. */}
+      <button
+        type="button"
+        className="sidebar-expand"
+        onClick={toggleCollapsed}
+        aria-label="Expand sidebar"
+        title="Expand sidebar"
+      >
+        <span aria-hidden="true">🛒</span>
+      </button>
     </>
   )
 }

@@ -13,7 +13,7 @@ export type ThemePreference = 'system' | 'dark' | 'light'
 const KEY = 'counting-calories:theme:v1'
 
 /** Matches `--bg` in each scheme, so the phone's browser bar matches the page. */
-const BAR_COLOUR = { light: '#fdf8f0', dark: '#16130f' } as const
+const BAR_COLOUR = { light: '#ffe8be', dark: '#151513' } as const
 
 /** What the sidebar shows. "Night mode: On" reads better than "Dark". */
 export const THEME_LABEL: Record<ThemePreference, string> = {
